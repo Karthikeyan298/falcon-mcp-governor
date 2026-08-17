@@ -1,0 +1,26 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Must match wherever the browser loads the UI from -- CORS rejects
+      # credentialed requests (login) from any other origin. If you change
+      # the frontend's published port below, update this too.
+      FALCON_UI_ORIGINS: ${FALCON_UI_ORIGINS:-http://localhost:4200}
+    volumes:
+      - falcon-db:/app/data
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./ui/mcp-governance-ui
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  falcon-db:
