@@ -8,3 +8,4 @@ dist/
 .env
 .DS_Store
 backend/data/*.db
+local-test-setup/db-mcp-server/data/*.db

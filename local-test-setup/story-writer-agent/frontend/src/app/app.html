@@ -1,0 +1,37 @@
+<main class="page">
+  <h1>Story Writer Agent</h1>
+  <p class="subtitle">Give it a title, and the agent will write a story, save it, and email it to you.</p>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="story-form">
+    <label for="title">Story title</label>
+    <input id="title" type="text" formControlName="title" placeholder="e.g. The Last Lighthouse" />
+    @if (form.controls.title.touched && form.controls.title.invalid) {
+      <span class="field-error">Please enter a title (at least 2 characters).</span>
+    }
+
+    <label for="recipientEmail">Send the story to</label>
+    <input id="recipientEmail" type="email" formControlName="recipientEmail" placeholder="you@example.com" />
+    @if (form.controls.recipientEmail.touched && form.controls.recipientEmail.invalid) {
+      <span class="field-error">Please enter a valid email address.</span>
+    }
+
+    <button type="submit" [disabled]="loading()">
+      {{ loading() ? 'Writing...' : 'Generate story' }}
+    </button>
+  </form>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (result(); as r) {
+    <section class="result">
+      <h2>{{ r.title }}</h2>
+      <pre class="story-text">{{ r.story }}</pre>
+      <ul class="status-list">
+        <li>Database: {{ r.db_status }} @if (r.db_tool_used) { (via {{ r.db_tool_used }}) }</li>
+        <li>Email: {{ r.email_status }} @if (r.email_tool_used) { (via {{ r.email_tool_used }}) }</li>
+      </ul>
+    </section>
+  }
+</main>

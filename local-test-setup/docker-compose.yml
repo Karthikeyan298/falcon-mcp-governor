@@ -1,0 +1,57 @@
+services:
+  db-mcp-server:
+    build: ./db-mcp-server
+    container_name: db-mcp-server
+    ports:
+      - "8001:8000"
+    volumes:
+      - db-mcp-data:/app/data
+    environment:
+      DB_MCP_HOST: 0.0.0.0
+      DB_MCP_PORT: "8000"
+      DB_MCP_SQLITE_PATH: /app/data/app.db
+    restart: unless-stopped
+
+  email-mcp-server:
+    build: ./email-mcp-server
+    container_name: email-mcp-server
+    ports:
+      - "8002:8002"
+    env_file:
+      - ./email-mcp-server/.env
+    environment:
+      EMAIL_MCP_HOST: 0.0.0.0
+      EMAIL_MCP_PORT: "8002"
+    restart: unless-stopped
+
+  story-backend:
+    build: ./story-writer-agent/backend
+    container_name: story-backend
+    ports:
+      - "9001:9001"
+    environment:
+      LLM_PROVIDER: ${LLM_PROVIDER:-ollama}
+      LLM_MODEL: ${LLM_MODEL:-llama3}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      DB_MCP_SERVER_URL: http://host.docker.internal:8000/mcp/database
+      EMAIL_MCP_SERVER_URL: http://host.docker.internal:8000/mcp/email-server
+      MCP_AGENT_KEY: ${MCP_AGENT_KEY:-}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:4201}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - db-mcp-server
+      - email-mcp-server
+    restart: unless-stopped
+
+  story-frontend:
+    build: ./story-writer-agent/frontend
+    container_name: story-frontend
+    ports:
+      - "4201:80"
+    depends_on:
+      - story-backend
+    restart: unless-stopped
+
+volumes:
+  db-mcp-data:
