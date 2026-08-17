@@ -12,6 +12,14 @@ services:
       DB_MCP_SQLITE_PATH: /app/data/app.db
     restart: unless-stopped
 
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped
+
   email-mcp-server:
     build: ./email-mcp-server
     container_name: email-mcp-server
@@ -22,6 +30,10 @@ services:
     environment:
       EMAIL_MCP_HOST: 0.0.0.0
       EMAIL_MCP_PORT: "8002"
+      EMAIL_SMTP_HOST: mailhog
+      EMAIL_SMTP_PORT: "1025"
+    depends_on:
+      - mailhog
     restart: unless-stopped
 
   story-backend:
