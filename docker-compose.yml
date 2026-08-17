@@ -11,6 +11,8 @@ services:
       FALCON_UI_ORIGINS: ${FALCON_UI_ORIGINS:-http://localhost:4200}
     volumes:
       - falcon-db:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
   frontend:
