@@ -45,6 +45,7 @@ services:
       LLM_PROVIDER: ${LLM_PROVIDER:-ollama}
       LLM_MODEL: ${LLM_MODEL:-llama3}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       DB_MCP_SERVER_URL: http://host.docker.internal:8000/mcp/database
       EMAIL_MCP_SERVER_URL: http://host.docker.internal:8000/mcp/email-server
       MCP_AGENT_KEY: ${MCP_AGENT_KEY:-}

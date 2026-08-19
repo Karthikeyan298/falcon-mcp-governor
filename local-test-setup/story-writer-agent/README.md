@@ -39,10 +39,12 @@ cp .env.example .env   # edit MCP server URLs / LLM settings as needed
 
 Config (`backend/.env`):
 
-- `LLM_PROVIDER` / `LLM_MODEL` — currently only `ollama` is implemented; add
+- `LLM_PROVIDER` / `LLM_MODEL` — `ollama` and `openai` are implemented; add
   new vendors in `app/llm/factory.py` + a new provider class in `app/llm/`.
 - `OLLAMA_BASE_URL` — local Ollama server (default `http://localhost:11434`).
   Run `ollama pull llama3 && ollama serve` before generating stories.
+- `OPENAI_API_KEY` — required when `LLM_PROVIDER=openai`; set `LLM_MODEL` to
+  an OpenAI chat model (e.g. `gpt-4o-mini`).
 - `DB_MCP_SERVER_URL` / `EMAIL_MCP_SERVER_URL` — your two HTTP MCP servers.
 - `FRONTEND_ORIGIN` — CORS origin for the Angular dev server.
 
