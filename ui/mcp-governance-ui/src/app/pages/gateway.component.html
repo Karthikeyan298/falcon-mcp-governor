@@ -1,0 +1,86 @@
+@if (errorMessage) {
+  <div class="error-banner">{{ errorMessage }}</div>
+}
+<section class="content-grid">
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Simulate an agent call</h3>
+    </div>
+    <p class="empty-state">
+      Send a request through the gateway just like an AI agent would — the policy engine, trust
+      registry, and parameter rules run for real and the result is logged to the audit trail.
+    </p>
+
+    <form class="invoke-form" (ngSubmit)="submit()">
+      <label>
+        Agent
+        <select name="agent" [(ngModel)]="form.agent" required>
+          <option value="" disabled>Select agent</option>
+          @for (agent of state.agents; track agent.name) {
+            <option [value]="agent.name">{{ agent.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Server
+        <select name="server" [(ngModel)]="form.server" (ngModelChange)="onServerChange()" required>
+          @for (server of state.servers; track server.slug) {
+            <option [value]="server.slug">{{ server.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Tool
+        <select name="tool" [(ngModel)]="form.tool" (ngModelChange)="onToolChange()" required>
+          @for (tool of toolsForServer(form.server); track tool.name) {
+            <option [value]="tool.name">{{ tool.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        User
+        <input name="user" type="text" placeholder="alice" [(ngModel)]="form.user" required />
+      </label>
+
+      @if (paramFields().length === 0) {
+        <p class="empty-state param-empty-state">This tool takes no parameters.</p>
+      }
+      @for (field of paramFields(); track field.name) {
+        <label>
+          {{ field.name }}{{ field.required ? ' *' : '' }} ({{ field.type }})
+          @if (field.isJson) {
+            <textarea
+              [name]="'param_' + field.name"
+              rows="2"
+              placeholder="JSON, e.g. {{ '{' }}&quot;key&quot;: &quot;value&quot;{{ '}' }}"
+              [(ngModel)]="paramValues[field.name]"
+            ></textarea>
+          } @else {
+            <input [name]="'param_' + field.name" type="text" [placeholder]="field.type" [(ngModel)]="paramValues[field.name]" />
+          }
+        </label>
+      }
+
+      <button class="primary-btn" type="submit" [disabled]="invoking">
+        {{ invoking ? 'Sending…' : 'Send request through gateway' }}
+      </button>
+    </form>
+
+    @if (result) {
+      <div class="invoke-result">
+        <span class="badge" [ngClass]="{ allowed: result.decision === 'allow', blocked: result.decision === 'deny' }">
+          {{ result.decisionLabel }}
+        </span>
+        <p>{{ result.reason }}</p>
+        @if (result.result) {
+          <small>{{ result.result.message }}</small>
+        }
+      </div>
+    }
+  </div>
+
+  <app-audit-trail class="span-2"></app-audit-trail>
+</section>

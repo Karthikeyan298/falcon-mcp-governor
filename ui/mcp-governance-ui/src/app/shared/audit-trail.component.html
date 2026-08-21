@@ -1,0 +1,34 @@
+<div class="panel-header">
+  <h3>Audit trail</h3>
+  <button class="ghost-btn" type="button" (click)="exportAuditLog()">Export log</button>
+</div>
+<div class="panel-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Agent</th>
+        <th>Tool</th>
+        <th>Action</th>
+        <th>Decision</th>
+        <th>User</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (entry of state.auditTrail; track entry.time + entry.tool) {
+        <tr>
+          <td>{{ entry.time }}</td>
+          <td>{{ entry.agent }}</td>
+          <td>{{ entry.tool }}</td>
+          <td>{{ entry.action }}</td>
+          <td>
+            <span class="badge" [ngClass]="{ allowed: entry.decision === 'Allowed', blocked: entry.decision === 'Denied' }">
+              {{ entry.decision }}
+            </span>
+          </td>
+          <td>{{ entry.user }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,14 @@
+<section class="stats-grid">
+  @for (stat of state.stats; track stat.label) {
+    <article class="stat-card">
+      <span>{{ stat.label }}</span>
+      <strong>{{ stat.value }}</strong>
+      <small>{{ stat.delta }}</small>
+    </article>
+  }
+</section>
+
+<section class="content-grid">
+  <app-tool-policy-matrix class="span-3"></app-tool-policy-matrix>
+  <app-audit-trail class="span-3"></app-audit-trail>
+</section>

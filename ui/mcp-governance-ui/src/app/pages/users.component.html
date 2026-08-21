@@ -1,0 +1,64 @@
+@if (errorMessage) {
+  <div class="error-banner">{{ errorMessage }}</div>
+}
+<section class="content-grid">
+  <div class="panel span-2">
+    <div class="panel-header">
+      <h3>Users</h3>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Role</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of state.users; track user.id) {
+          <tr>
+            <td>{{ user.username }}</td>
+            <td>{{ user.role }}</td>
+            <td>
+              <span class="badge" [ngClass]="{ allowed: user.status === 'Active', blocked: user.status === 'Suspended' }">
+                {{ user.status }}
+              </span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Create user</h3>
+    </div>
+    @if (newUserCreated) {
+      <div class="api-key-banner">
+        <div>
+          Temporary password for <strong>{{ newUserCreated.username }}</strong> — copy it now, it won't be shown again.
+          Share it with the user; they should change it on first login.
+        </div>
+        <code class="api-key-value">{{ newUserCreated.password }}</code>
+        <button class="ghost-btn" type="button" (click)="dismissNewUser()">Dismiss</button>
+      </div>
+    }
+    <form class="invoke-form" (ngSubmit)="create()">
+      <label>
+        Username
+        <input name="username" type="text" placeholder="jsmith" [(ngModel)]="form.username" required />
+      </label>
+      <label>
+        Role
+        <select name="role" [(ngModel)]="form.role">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </label>
+      <button class="primary-btn" type="submit" [disabled]="creating">
+        {{ creating ? 'Creating…' : 'Create user' }}
+      </button>
+    </form>
+  </div>
+</section>

@@ -1,0 +1,39 @@
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { NgClass } from '@angular/common';
+
+import { AppStateService } from '../app.state.service';
+
+const POLL_INTERVAL_MS = 10_000;
+
+@Component({
+  selector: 'app-audit-trail',
+  imports: [NgClass],
+  templateUrl: './audit-trail.component.html',
+  host: { class: 'panel' },
+})
+export class AuditTrailComponent implements OnInit, OnDestroy {
+  protected state = inject(AppStateService);
+
+  private pollTimer: ReturnType<typeof setInterval> | null = null;
+
+  ngOnInit(): void {
+    this.state.refreshAudit();
+    this.pollTimer = setInterval(() => this.state.refreshAudit(), POLL_INTERVAL_MS);
+  }
+
+  ngOnDestroy(): void {
+    if (this.pollTimer !== null) {
+      clearInterval(this.pollTimer);
+    }
+  }
+
+  exportAuditLog(): void {
+    const blob = new Blob([JSON.stringify(this.state.auditTrail, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'mcp-audit-log.json';
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+}

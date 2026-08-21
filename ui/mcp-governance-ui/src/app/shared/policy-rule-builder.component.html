@@ -1,0 +1,51 @@
+<div class="panel-header">
+  <h3>Policy rule builder</h3>
+</div>
+<p class="empty-state">
+  Build one rule at a time and stage it into the YAML — nothing takes effect until you click Deploy.
+</p>
+@if (errorMessage) {
+  <div class="error-banner">{{ errorMessage }}</div>
+}
+<form class="invoke-form" (ngSubmit)="submit()">
+  <label>
+    Applies to
+    <select name="agentScope" [(ngModel)]="form.agentScope">
+      <option value="">All agents</option>
+      @for (agent of state.agents; track agent.name) {
+        <option [value]="agent.name">{{ agent.name }}</option>
+      }
+    </select>
+  </label>
+
+  <label>
+    Server
+    <select name="server" [(ngModel)]="form.server">
+      @for (server of state.servers; track server.slug) {
+        <option [value]="server.slug">{{ server.name }}</option>
+      }
+    </select>
+  </label>
+
+  <label>
+    Tool
+    <select name="tool" [(ngModel)]="form.tool">
+      <option value="*">All tools (*)</option>
+      @for (tool of toolsForServer(form.server); track tool.name) {
+        <option [value]="tool.name">{{ tool.name }}</option>
+      }
+    </select>
+  </label>
+
+  <label>
+    Action
+    <select name="action" [(ngModel)]="form.action">
+      <option value="allow">Allow</option>
+      <option value="deny">Deny</option>
+    </select>
+  </label>
+
+  <button class="secondary-btn" type="submit" [disabled]="addingRule || !form.server">
+    {{ addingRule ? 'Adding…' : 'Add rule to YAML' }}
+  </button>
+</form>

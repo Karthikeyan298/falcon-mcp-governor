@@ -1,0 +1,9 @@
+<div class="panel-header">
+  <h3>Policy as code</h3>
+  <button class="ghost-btn" type="button" (click)="deploy()">Deploy</button>
+</div>
+<div class="deploy-status">Last deployment: {{ state.lastDeployment }}</div>
+@if (errorMessage) {
+  <div class="error-banner">{{ errorMessage }}</div>
+}
+<textarea class="policy-editor" [(ngModel)]="state.policyYaml" name="policyYaml" spellcheck="false"></textarea>

@@ -1,0 +1,68 @@
+@if (errorMessage) {
+  <div class="error-banner">{{ errorMessage }}</div>
+}
+<section class="content-grid">
+  <div class="panel span-2">
+    <div class="panel-header">
+      <h3>MCP servers</h3>
+    </div>
+    <div class="list-stack">
+      @for (server of state.servers; track server.slug) {
+        <div class="trust-row">
+          <div>
+            <strong>{{ server.name }}</strong>
+            <small>{{ server.endpoint }} · {{ server.toolCount }} tools · synced {{ server.lastSynced }}</small>
+            @if (gatewayUrlFor(server); as url) {
+              <small>Agent URL (via gateway): <code>{{ url }}</code></small>
+            }
+          </div>
+          <div class="server-controls">
+            <span class="tiny-badge" [ngClass]="{ verified: server.trust === 'Trusted', approval: server.trust === 'Needs review' }">
+              {{ server.trust }}
+            </span>
+            <button class="ghost-btn small" type="button" (click)="sync(server.slug)">Sync now</button>
+            <button class="ghost-btn small" type="button" (click)="edit(server)">Edit</button>
+            <button class="ghost-btn small danger" type="button" (click)="remove(server.slug)">Remove</button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h3>{{ editingSlug ? 'Edit MCP server' : 'Add MCP server' }}</h3>
+    </div>
+    <form class="invoke-form" (ngSubmit)="save()">
+      <label>
+        Slug
+        <input name="slug" type="text" placeholder="github" [(ngModel)]="form.slug" [readonly]="!!editingSlug" required />
+      </label>
+      <label>
+        Name
+        <input name="name" type="text" placeholder="GitHub MCP" [(ngModel)]="form.name" required />
+      </label>
+      <label>
+        Endpoint
+        <input name="endpoint" type="text" placeholder="http://github.internal:7443" [(ngModel)]="form.endpoint" required />
+      </label>
+      <label>
+        Trust
+        <select name="trust" [(ngModel)]="form.trust">
+          <option value="Needs review">Needs review</option>
+          <option value="Trusted">Trusted</option>
+        </select>
+      </label>
+      <div class="status-cluster">
+        <button class="primary-btn" type="submit" [disabled]="saving">
+          {{ saving ? 'Saving…' : editingSlug ? 'Save changes' : 'Add server' }}
+        </button>
+        @if (editingSlug) {
+          <button class="ghost-btn small" type="button" (click)="cancelEdit()">Cancel</button>
+        }
+      </div>
+    </form>
+  </div>
+
+  <app-signed-tools></app-signed-tools>
+</section>

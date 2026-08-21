@@ -113,6 +113,10 @@ export class ApiService {
     return this.http.get<Dashboard>(`${API_BASE}/api/dashboard`);
   }
 
+  getAudit(): Observable<AuditItem[]> {
+    return this.http.get<AuditItem[]>(`${API_BASE}/api/audit`);
+  }
+
   getAgents(): Observable<Agent[]> {
     return this.http.get<Agent[]>(`${API_BASE}/api/agents`);
   }

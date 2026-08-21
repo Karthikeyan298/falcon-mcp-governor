@@ -1,0 +1,86 @@
+@if (errorMessage) {
+  <div class="error-banner">{{ errorMessage }}</div>
+}
+<section class="content-grid">
+  <div class="panel span-2">
+    <div class="panel-header">
+      <h3>Agents</h3>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Agent</th>
+          <th>Owner</th>
+          <th>Environment</th>
+          <th>Tools allowed</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (agent of state.agents; track agent.name) {
+          <tr>
+            <td>{{ agent.name }}</td>
+            <td>{{ agent.owner }}</td>
+            <td>{{ agent.environment }}</td>
+            <td>{{ agent.tools_allowed }}</td>
+            <td>
+              <span class="badge" [ngClass]="{ allowed: agent.status === 'Active', blocked: agent.status === 'Suspended' }">
+                {{ agent.status }}
+              </span>
+            </td>
+            <td>
+              <div class="server-controls">
+                <button class="secondary-btn small" type="button" (click)="toggleStatus(agent.name)">
+                  {{ agent.status === 'Active' ? 'Suspend' : 'Reinstate' }}
+                </button>
+                <button class="ghost-btn small danger" type="button" (click)="remove(agent.name)">Remove</button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Register agent</h3>
+    </div>
+    @if (newApiKey) {
+      <div class="api-key-banner">
+        <div>
+          API key for <strong>{{ newApiKey.name }}</strong> — copy it now, it won't be shown again.
+          Send it as the <code>X-Agent-Key</code> header on gateway requests.
+        </div>
+        <code class="api-key-value">{{ newApiKey.key }}</code>
+        <button class="ghost-btn" type="button" (click)="dismissKey()">Dismiss</button>
+      </div>
+    }
+    <form class="invoke-form" (ngSubmit)="register()">
+      <label>
+        Name
+        <input name="name" type="text" placeholder="support-agent" [(ngModel)]="form.name" required />
+      </label>
+      <label>
+        Owner
+        <input name="owner" type="text" placeholder="alice" [(ngModel)]="form.owner" required />
+      </label>
+      <label>
+        Environment
+        <select name="environment" [(ngModel)]="form.environment">
+          <option value="Production">Production</option>
+          <option value="Staging">Staging</option>
+          <option value="Dev">Dev</option>
+        </select>
+      </label>
+      <label>
+        Tools allowed
+        <input name="tools_allowed" type="number" min="0" [(ngModel)]="form.tools_allowed" />
+      </label>
+      <button class="primary-btn" type="submit" [disabled]="registering">
+        {{ registering ? 'Registering…' : 'Register agent' }}
+      </button>
+    </form>
+  </div>
+</section>

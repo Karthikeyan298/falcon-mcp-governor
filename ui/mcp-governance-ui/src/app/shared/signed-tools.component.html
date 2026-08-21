@@ -1,0 +1,22 @@
+<div class="panel-header">
+  <h3>Signed tools</h3>
+  <button class="ghost-btn" type="button" (click)="goToPolicies()">View trust list</button>
+</div>
+<div class="list-stack panel-scroll">
+  @for (item of state.signedTools; track item.name) {
+    <div class="trust-row">
+      <div>
+        <strong>{{ item.name }}</strong>
+        <small>{{ item.publisher }}</small>
+      </div>
+      <div class="status-cluster">
+        <span class="tiny-badge" [ngClass]="{
+          verified: item.status === 'Verified',
+          approval: item.status === 'Needs approval',
+          revoked: item.status === 'Revoked'
+        }">{{ item.status }}</span>
+        <small>{{ item.hash }}</small>
+      </div>
+    </div>
+  }
+</div>

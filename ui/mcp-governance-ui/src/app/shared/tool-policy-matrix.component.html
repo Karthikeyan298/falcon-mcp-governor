@@ -1,0 +1,34 @@
+<div class="panel-header">
+  <h3>Tool policy matrix</h3>
+  <button class="ghost-btn" type="button" (click)="goToPolicies()">Edit policies</button>
+</div>
+<div class="panel-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Tool</th>
+        <th>Server</th>
+        <th>Status</th>
+        <th>Signed</th>
+        <th>Risk</th>
+        <th>Environment</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (tool of state.toolPolicies; track tool.name) {
+        <tr>
+          <td>{{ tool.name }}</td>
+          <td>{{ tool.server }}</td>
+          <td>
+            <span class="badge" [ngClass]="{ allowed: tool.status === 'Allowed', blocked: tool.status === 'Denied' }">
+              {{ tool.status }}
+            </span>
+          </td>
+          <td>{{ tool.signed ? 'Yes' : 'No' }}</td>
+          <td>{{ tool.risk }}</td>
+          <td>{{ tool.environment }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

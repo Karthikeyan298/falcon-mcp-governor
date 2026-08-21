@@ -1,0 +1,49 @@
+<section class="content-grid">
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Account</h3>
+    </div>
+    @if (state.currentUser) {
+      <dl class="account-dl">
+        <dt>Username</dt><dd>{{ state.currentUser.username }}</dd>
+        <dt>Role</dt><dd>{{ state.currentUser.role }}</dd>
+      </dl>
+    }
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Change password</h3>
+    </div>
+    @if (successMessage) {
+      <div class="success-banner">{{ successMessage }}</div>
+    }
+    @if (errorMessage) {
+      <div class="error-banner">{{ errorMessage }}</div>
+    }
+    <form class="invoke-form" (ngSubmit)="changePassword()">
+      <label>
+        Current password
+        <input name="currentPassword" type="password" [(ngModel)]="form.currentPassword" required />
+      </label>
+      <label>
+        New password
+        <input name="newPassword" type="password" [(ngModel)]="form.newPassword" required />
+      </label>
+      <label>
+        Confirm new password
+        <input name="confirmPassword" type="password" [(ngModel)]="form.confirmPassword" required />
+      </label>
+      <button class="primary-btn" type="submit" [disabled]="changing">
+        {{ changing ? 'Saving…' : 'Change password' }}
+      </button>
+    </form>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Session</h3>
+    </div>
+    <button class="danger-btn" type="button" (click)="logout()">Sign out</button>
+  </div>
+</section>
