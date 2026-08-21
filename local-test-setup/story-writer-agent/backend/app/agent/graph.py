@@ -20,7 +20,6 @@ DB_FIELD_ALIASES = {
     "content": ["content", "story", "body", "text"],
 }
 DB_CREATE_TABLE_KEYWORDS = ["create", "table"]
-DB_TABLE_MISSING_HINTS = ["does not exist", "no such table", "doesn't exist", "not found"]
 
 EMAIL_KEYWORDS = ["send", "email", "mail", "notify", "message"]
 EMAIL_FIELD_ALIASES = {
@@ -48,14 +47,20 @@ async def generate_story(state: AgentState) -> AgentState:
     return {"story": story}
 
 
-async def _create_table_if_missing(tools: list[dict], server_url: str) -> None:
-    create_tool = select_tool(tools, DB_CREATE_TABLE_KEYWORDS)
-    args = map_arguments(
-        create_tool,
-        {"table": ["table", "collection", "entity"], "columns": ["columns", "fields", "schema"]},
-        {"table": DB_TABLE_NAME, "columns": DB_TABLE_COLUMNS},
-    )
-    await call_tool(server_url, create_tool["name"], args)
+async def ensure_table(state: AgentState) -> AgentState:
+    try:
+        db_url = settings.db_mcp_server_url
+        tools = await list_tools(db_url)
+        create_tool = select_tool(tools, DB_CREATE_TABLE_KEYWORDS)
+        args = map_arguments(
+            create_tool,
+            {"table": ["table", "collection", "entity"], "columns": ["columns", "fields", "schema"]},
+            {"table": DB_TABLE_NAME, "columns": DB_TABLE_COLUMNS},
+        )
+        await call_tool(db_url, create_tool["name"], args)
+        return {"db_status": "table_ready"}
+    except Exception as exc:  # noqa: BLE001
+        return {"db_status": f"failed: {_flatten(exc)}"}
 
 
 async def store_story(state: AgentState) -> AgentState:
@@ -68,13 +73,7 @@ async def store_story(state: AgentState) -> AgentState:
             DB_FIELD_ALIASES,
             {"table": DB_TABLE_NAME, "title": state["title"], "content": state["story"]},
         )
-        try:
-            await call_tool(db_url, tool["name"], args)
-        except RuntimeError as insert_exc:
-            if not any(hint in str(insert_exc).lower() for hint in DB_TABLE_MISSING_HINTS):
-                raise
-            await _create_table_if_missing(tools, db_url)
-            await call_tool(db_url, tool["name"], args)
+        await call_tool(db_url, tool["name"], args)
         return {"db_status": "saved", "db_tool_used": tool["name"]}
     except Exception as exc:  # noqa: BLE001 - surface failure to the caller
         return {"db_status": f"failed: {_flatten(exc)}", "db_tool_used": None}
@@ -102,11 +101,13 @@ async def send_email(state: AgentState) -> AgentState:
 def build_graph():
     graph = StateGraph(AgentState)
     graph.add_node("generate_story", generate_story)
+    graph.add_node("ensure_table", ensure_table)
     graph.add_node("store_story", store_story)
     graph.add_node("send_email", send_email)
 
     graph.set_entry_point("generate_story")
-    graph.add_edge("generate_story", "store_story")
+    graph.add_edge("generate_story", "ensure_table")
+    graph.add_edge("ensure_table", "store_story")
     graph.add_edge("store_story", "send_email")
     graph.add_edge("send_email", END)
 
