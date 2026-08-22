@@ -37,8 +37,10 @@ export interface AuditItem {
   agent: string;
   tool: string;
   action: string;
-  decision: 'Allowed' | 'Denied';
+  decision: 'Allowed' | 'Denied' | 'Pending';
   user: string;
+  reason: string | null;
+  arguments: Record<string, unknown> | null;
 }
 
 export interface SignedTool {
@@ -99,15 +101,29 @@ export interface Dashboard {
 }
 
 export interface GatewayInvokeResult {
-  decision: 'allow' | 'deny';
+  decision: 'allow' | 'deny' | 'require_approval';
   decisionLabel: string;
   reason: string;
   result: { ok: boolean; message: string } | null;
 }
 
+export interface Approval {
+  id: number;
+  agent: string;
+  server: string;
+  tool: string;
+  arguments: Record<string, unknown>;
+  user: string;
+  status: 'pending' | 'approved' | 'denied' | 'executed';
+  decisionBy: string | null;
+  decidedAt: string | null;
+  createdAt: string;
+  result: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
   getDashboard(): Observable<Dashboard> {
     return this.http.get<Dashboard>(`${API_BASE}/api/dashboard`);
@@ -115,6 +131,22 @@ export class ApiService {
 
   getAudit(): Observable<AuditItem[]> {
     return this.http.get<AuditItem[]>(`${API_BASE}/api/audit`);
+  }
+
+  getApprovals(): Observable<Approval[]> {
+    return this.http.get<Approval[]>(`${API_BASE}/api/approvals`);
+  }
+
+  getPendingCount(): Observable<{ count: number }> {
+    return this.http.get<{ count: number }>(`${API_BASE}/api/approvals/pending-count`);
+  }
+
+  approveRequest(id: number): Observable<Approval> {
+    return this.http.post<Approval>(`${API_BASE}/api/approvals/${id}/approve`, {});
+  }
+
+  denyRequest(id: number): Observable<Approval> {
+    return this.http.post<Approval>(`${API_BASE}/api/approvals/${id}/deny`, {});
   }
 
   getAgents(): Observable<Agent[]> {
@@ -182,6 +214,20 @@ export class ApiService {
     action: string;
   }): Observable<{ yaml: string }> {
     return this.http.post<{ yaml: string }>(`${API_BASE}/api/policies/rule-preview`, payload);
+  }
+
+  previewPolicyParamRule(payload: {
+    yaml: string;
+    agent: string | null;
+    server: string;
+    tool: string;
+    param: string;
+    operator: string;
+    value: string;
+    decision: string;
+    reason: string;
+  }): Observable<{ yaml: string }> {
+    return this.http.post<{ yaml: string }>(`${API_BASE}/api/policies/param-rule-preview`, payload);
   }
 
   invokeGateway(payload: {

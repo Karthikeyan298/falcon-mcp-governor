@@ -19,7 +19,7 @@ from app.database import get_database
 from app.exceptions import BadRequestError, ConflictError, ForbiddenError, NotFoundError, UnauthorizedError
 from app.mcp_client import McpDiscoveryError
 from app.policy_engine import InvalidPolicyError
-from app.routers import agents, audit, auth, dashboard, gateway, mcp_gateway, policies, servers, tools, users
+from app.routers import agents, approvals, audit, auth, dashboard, gateway, mcp_gateway, policies, servers, tools, users
 from app.services.auth_service import SESSION_COOKIE_NAME, AuthService
 
 
@@ -124,6 +124,7 @@ app.include_router(dashboard.router)
 app.include_router(agents.router)
 app.include_router(servers.router)
 app.include_router(policies.router)
+app.include_router(approvals.router)
 app.include_router(audit.router)
 app.include_router(tools.router)
 app.include_router(gateway.router)

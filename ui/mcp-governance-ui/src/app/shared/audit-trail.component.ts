@@ -27,6 +27,16 @@ export class AuditTrailComponent implements OnInit, OnDestroy {
     }
   }
 
+  argsSummary(args: Record<string, unknown> | null): string {
+    if (!args) return '—';
+    const pairs = Object.entries(args).map(([k, v]) => {
+      const s = typeof v === 'string' ? v : JSON.stringify(v);
+      return `${k}=${s.length > 40 ? s.slice(0, 40) + '…' : s}`;
+    });
+    const joined = pairs.join(', ');
+    return joined.length > 80 ? joined.slice(0, 80) + '…' : joined;
+  }
+
   exportAuditLog(): void {
     const blob = new Blob([JSON.stringify(this.state.auditTrail, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);

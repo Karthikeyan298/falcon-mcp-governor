@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import {
   Agent,
   ApiService,
+  Approval,
   AuditItem,
   CurrentUser,
   Dashboard,
@@ -28,6 +29,8 @@ export class AppStateService {
   servers: McpServer[] = [];
   tools: Tool[] = [];
   users: CurrentUser[] = [];
+  approvals: Approval[] = [];
+  pendingApprovalCount = 0;
 
   constructor(private readonly api: ApiService) {}
 
@@ -73,6 +76,13 @@ export class AppStateService {
 
   refreshAudit(): void {
     this.api.getAudit().subscribe((items) => (this.auditTrail = items));
+  }
+
+  refreshApprovals(): void {
+    this.api.getApprovals().subscribe((items) => {
+      this.approvals = items;
+      this.pendingApprovalCount = items.filter((a) => a.status === 'pending').length;
+    });
   }
 
   loadUsers(): void {

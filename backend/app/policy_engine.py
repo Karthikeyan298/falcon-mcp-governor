@@ -57,6 +57,7 @@ import yaml
 ACTION_TO_DECISION = {
     'allow': 'allow',
     'deny': 'deny',
+    'require_approval': 'require_approval',
 }
 
 RISK_TO_DEFAULT_ACTION = {
@@ -69,6 +70,10 @@ RISK_TO_DEFAULT_ACTION = {
 _PARAM_RULE_OPERATORS: dict[str, Callable[[str, str], bool]] = {
     'equals': lambda value, target: value == target,
     'not_equals': lambda value, target: value != target,
+    'contains': lambda value, target: target in value,
+    'not_contains': lambda value, target: target not in value,
+    'startswith': lambda value, target: value.startswith(target),
+    'not_startswith': lambda value, target: not value.startswith(target),
     'endswith': lambda value, target: value.endswith(target),
     'not_endswith': lambda value, target: not value.endswith(target),
 }
@@ -131,6 +136,9 @@ class PolicyEngine:
         if action == 'deny':
             return Decision('deny', 'Blocked by policy rule')
 
+        if action == 'require_approval':
+            return Decision('require_approval', 'Awaiting human approval before execution')
+
         if param_decision is not None:
             return param_decision
 
@@ -166,7 +174,7 @@ class PolicyEngine:
         already configured for that tool are preserved.
         """
         if action not in ACTION_TO_DECISION:
-            raise InvalidPolicyError(f"Invalid action '{action}'; must be one of allow, deny")
+            raise InvalidPolicyError(f"Invalid action '{action}'; must be one of allow, deny, require_approval")
 
         parsed = self.parse(policy_yaml)
 
@@ -178,6 +186,51 @@ class PolicyEngine:
         tools_cfg = servers_cfg.setdefault(server, {}).setdefault('tools', {})
         tools_cfg.setdefault(tool, {})['action'] = action
 
+        return self._dump(parsed)
+
+    def upsert_param_rule(
+        self, policy_yaml: str, *,
+        agent: str | None, server: str, tool: str,
+        param: str, operator: str, value: str, decision: str, reason: str,
+    ) -> str:
+        """Add or replace a single param_rule entry for the given (agent, server, tool).
+
+        Rule identity is (param, operator) — submitting the same pair again updates
+        the value/decision/reason in place. `tool='*'` is rejected because param rules
+        must target a concrete tool to be meaningful.
+        """
+        if tool == '*':
+            raise InvalidPolicyError("Parameter rules must target a specific tool, not the wildcard '*'")
+        if not param:
+            raise InvalidPolicyError("Parameter name is required")
+        if operator not in _PARAM_RULE_OPERATORS:
+            valid = ', '.join(_PARAM_RULE_OPERATORS)
+            raise InvalidPolicyError(f"Invalid operator '{operator}'; must be one of {valid}")
+        if decision not in ACTION_TO_DECISION:
+            raise InvalidPolicyError(f"Invalid decision '{decision}'; must be one of allow, deny, require_approval")
+
+        parsed = self.parse(policy_yaml)
+
+        if agent:
+            servers_cfg = parsed.setdefault('agent_overrides', {}).setdefault(agent, {}).setdefault('servers', {})
+        else:
+            servers_cfg = parsed.setdefault('servers', {})
+
+        tool_cfg = servers_cfg.setdefault(server, {}).setdefault('tools', {}).setdefault(tool, {})
+        if 'action' not in tool_cfg:
+            tool_cfg['action'] = 'allow'  # safe default so the rule is reachable
+
+        new_rule: dict[str, str] = {'param': param, operator: value, 'decision': decision}
+        if reason:
+            new_rule['reason'] = reason
+
+        rules: list = tool_cfg.setdefault('param_rules', [])
+        for i, existing in enumerate(rules):
+            if existing.get('param') == param and operator in existing:
+                rules[i] = new_rule
+                return self._dump(parsed)
+
+        rules.append(new_rule)
         return self._dump(parsed)
 
     @staticmethod
@@ -208,7 +261,13 @@ class PolicyEngine:
     def _param_rule(self, tool_cfg: dict, params: dict[str, Any]) -> Decision | None:
         for rule in tool_cfg.get('param_rules') or []:
             if self._param_rule_matches(rule, params):
-                return Decision(rule.get('decision', 'deny'), rule.get('reason', 'Blocked by parameter rule'))
+                param_name = rule.get('param', '')
+                raw = params.get(param_name)
+                ops = {op: rule[op] for op in _PARAM_RULE_OPERATORS if op in rule}
+                ops_detail = ', '.join(f"{op}={v!r}" for op, v in ops.items())
+                detail = f"param '{param_name}'={raw!r} matched {ops_detail}"
+                base = rule.get('reason') or 'Blocked by parameter rule'
+                return Decision(rule.get('decision', 'deny'), f"{base} [{detail}]")
         return None
 
     @staticmethod
@@ -217,16 +276,28 @@ class PolicyEngine:
         if not param_name:
             return False
 
-        value = params.get(param_name)
-        if not value:  # a missing/empty param never triggers a rule
+        raw = params.get(param_name)
+        if raw is None:
             return False
-        value = str(value)
+
+        # List parameters (e.g. email 'to' field) are checked element-by-element;
+        # the rule fires if any element satisfies all the operators in the rule.
+        if isinstance(raw, list):
+            values = [str(v) for v in raw if v is not None and str(v)]
+        else:
+            if not raw:  # empty string / falsy scalar → no trigger
+                return False
+            values = [str(raw)]
+
+        if not values:
+            return False
 
         matched_any_operator = False
         for op_name, op_fn in _PARAM_RULE_OPERATORS.items():
             if op_name in rule:
                 matched_any_operator = True
-                if not op_fn(value, str(rule[op_name])):
+                # For list params: rule fires if any element satisfies this operator
+                if not any(op_fn(v, str(rule[op_name])) for v in values):
                     return False
         return matched_any_operator
 

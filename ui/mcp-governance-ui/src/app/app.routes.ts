@@ -7,6 +7,7 @@ import { PoliciesComponent } from './pages/policies.component';
 import { GatewayComponent } from './pages/gateway.component';
 import { AuditComponent } from './pages/audit.component';
 import { AccountComponent } from './pages/account.component';
+import { ApprovalsComponent } from './pages/approvals.component';
 import { UsersComponent } from './pages/users.component';
 
 export const routes: Routes = [
@@ -19,4 +20,5 @@ export const routes: Routes = [
   { path: 'audit', component: AuditComponent },
   { path: 'account', component: AccountComponent },
   { path: 'users', component: UsersComponent },
+  { path: 'approvals', component: ApprovalsComponent },
 ];

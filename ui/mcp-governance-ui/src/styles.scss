@@ -171,6 +171,15 @@ button {
   text-transform: uppercase;
 }
 
+.rule-section-label {
+  margin: 0 0 10px;
+}
+
+.rule-divider {
+  border-top: 1px solid #1b2b43;
+  margin: 20px 0;
+}
+
 /* ── Tables ─────────────────────────────────── */
 
 table {
@@ -245,6 +254,39 @@ th {
 .tiny-badge.high {
   background: rgba(239, 68, 68, 0.12);
   color: #ff8d8d;
+}
+
+.badge.pending {
+  background: rgba(250, 204, 21, 0.12);
+  color: #f6d871;
+}
+
+.pending-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ff8d8d;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.args-cell {
+  font-size: 11px;
+  color: #8ba3c7;
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.decision-by {
+  display: block;
+  font-size: 10px;
+  color: #6a89b0;
+  margin-top: 2px;
 }
 
 /* ── List stack / trust rows ────────────────── */

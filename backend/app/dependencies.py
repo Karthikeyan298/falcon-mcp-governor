@@ -10,6 +10,7 @@ from app.exceptions import ForbiddenError, UnauthorizedError
 from app.gateway_session import GatewaySessionStore, get_session_store
 from app.policy_engine import PolicyEngine, get_policy_engine
 from app.services.agent_service import AgentService
+from app.services.approval_service import ApprovalService
 from app.services.audit_service import AuditService
 from app.services.auth_service import SESSION_COOKIE_NAME, AuthService
 from app.services.dashboard_service import DashboardService
@@ -62,6 +63,12 @@ def get_policy_service(
     database: Database = Depends(get_database), policy_engine: PolicyEngine = Depends(get_policy_engine),
 ) -> PolicyService:
     return PolicyService(database, policy_engine)
+
+
+def get_approval_service(
+    database: Database = Depends(get_database), policy_engine: PolicyEngine = Depends(get_policy_engine),
+) -> ApprovalService:
+    return ApprovalService(database, policy_engine)
 
 
 def get_audit_service(database: Database = Depends(get_database)) -> AuditService:

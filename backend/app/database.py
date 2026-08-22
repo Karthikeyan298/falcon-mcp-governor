@@ -101,6 +101,7 @@ CREATE TABLE IF NOT EXISTS audit (
     decision TEXT NOT NULL,
     user TEXT NOT NULL,
     reason TEXT,
+    arguments TEXT,
     created_at TEXT NOT NULL
 );
 
@@ -118,6 +119,20 @@ CREATE TABLE IF NOT EXISTS sessions (
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TEXT NOT NULL,
     expires_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS approvals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    agent TEXT NOT NULL,
+    server TEXT NOT NULL,
+    tool TEXT NOT NULL,
+    arguments TEXT NOT NULL,
+    user TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    decision_by TEXT,
+    decided_at TEXT,
+    created_at TEXT NOT NULL,
+    result TEXT
 );
 '''
 
@@ -192,9 +207,13 @@ class Database:
         if 'input_schema' not in tool_columns:
             conn.execute('ALTER TABLE tools ADD COLUMN input_schema TEXT')
 
-        # Human-approval flow removed -- every decision is now allow/deny, so
-        # the approvals table (and any pending rows in it) is dropped outright.
-        conn.execute('DROP TABLE IF EXISTS approvals')
+        approval_columns = {row['name'] for row in conn.execute('PRAGMA table_info(approvals)')}
+        if 'result' not in approval_columns:
+            conn.execute('ALTER TABLE approvals ADD COLUMN result TEXT')
+
+        audit_columns = {row['name'] for row in conn.execute('PRAGMA table_info(audit)')}
+        if 'arguments' not in audit_columns:
+            conn.execute('ALTER TABLE audit ADD COLUMN arguments TEXT')
 
         # Backfill agents left over from before api_key_hash existed with the same
         # deterministic demo key pattern _seed() uses, so they keep working locally.

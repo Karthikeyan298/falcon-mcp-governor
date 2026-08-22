@@ -12,9 +12,7 @@
           <div>
             <strong>{{ server.name }}</strong>
             <small>{{ server.endpoint }} · {{ server.toolCount }} tools · synced {{ server.lastSynced }}</small>
-            @if (gatewayUrlFor(server); as url) {
-              <small>Agent URL (via gateway): <code>{{ url }}</code></small>
-            }
+            <small>Agent URL: <code>{{ gatewayUrlFor(server) }}</code></small>
           </div>
           <div class="server-controls">
             <span class="tiny-badge" [ngClass]="{ verified: server.trust === 'Trusted', approval: server.trust === 'Needs review' }">
@@ -36,15 +34,15 @@
     <form class="invoke-form" (ngSubmit)="save()">
       <label>
         Slug
-        <input name="slug" type="text" placeholder="github" [(ngModel)]="form.slug" [readonly]="!!editingSlug" required />
+        <input name="slug" type="text" placeholder="calculator" [(ngModel)]="form.slug" [readonly]="!!editingSlug" required />
       </label>
       <label>
         Name
-        <input name="name" type="text" placeholder="GitHub MCP" [(ngModel)]="form.name" required />
+        <input name="name" type="text" placeholder="Calculator MCP" [(ngModel)]="form.name" required />
       </label>
       <label>
-        Endpoint
-        <input name="endpoint" type="text" placeholder="http://github.internal:7443" [(ngModel)]="form.endpoint" required />
+        Endpoint URL
+        <input name="endpoint" type="text" placeholder="http://host:8080/mcp" [(ngModel)]="form.endpoint" required />
       </label>
       <label>
         Trust

@@ -1,8 +1,10 @@
+import json
+
 from app.database import Database
 from app.exceptions import NotFoundError
 from app.formatting import decision_label
 from app.policy_engine import PolicyEngine
-from app.repositories import AuditRepository, ServerRepository, SettingsRepository, ToolRepository, TrustRepository
+from app.repositories import ApprovalRepository, AuditRepository, ServerRepository, SettingsRepository, ToolRepository, TrustRepository
 
 
 class GatewayInvokeService:
@@ -22,6 +24,7 @@ class GatewayInvokeService:
             tools_repo = ToolRepository(conn)
             trust_repo = TrustRepository(conn)
             audit_repo = AuditRepository(conn)
+            approval_repo = ApprovalRepository(conn)
 
             if servers_repo.get(server) is None:
                 raise NotFoundError('Unknown MCP server')
@@ -34,11 +37,39 @@ class GatewayInvokeService:
                 trust_status=trust_repo.get_status(f'{server}.{tool}'), agent=agent,
             )  # InvalidPolicyError propagates -> 422 via router's exception handler
 
-            label = decision_label(outcome.decision)
             now = self._database.now_iso()
+
+            params_json = json.dumps(params)
+
+            if outcome.decision == 'require_approval':
+                consumed = approval_repo.claim_approved(agent, server, tool)
+                if consumed:
+                    audit_repo.log(
+                        agent=agent, server=server, tool=tool, action='invoke',
+                        decision='Allowed', user=user, reason='Approved by human',
+                        arguments=params_json, created_at=now,
+                    )
+                    return {'decision': 'allow', 'decisionLabel': 'Allowed', 'reason': 'Approved by human',
+                            'result': {'ok': True, 'message': f'{server}.{tool} executed successfully'}}
+
+                approval_id = approval_repo.create(
+                    agent=agent, server=server, tool=tool,
+                    arguments=params_json, user=user, created_at=now,
+                )
+                audit_repo.log(
+                    agent=agent, server=server, tool=tool, action='invoke',
+                    decision='Pending', user=user, reason=f'Awaiting human approval (#{approval_id})',
+                    arguments=params_json, created_at=now,
+                )
+                return {'decision': 'require_approval', 'decisionLabel': 'Pending approval',
+                        'reason': f'Awaiting human approval (#{approval_id}). Approve it in the Falcon governance portal, then retry.',
+                        'result': None}
+
+            label = decision_label(outcome.decision)
             audit_repo.log(
                 agent=agent, server=server, tool=tool, action='invoke',
-                decision=label, user=user, reason=outcome.reason, created_at=now,
+                decision=label, user=user, reason=outcome.reason,
+                arguments=params_json, created_at=now,
             )
 
             result = None

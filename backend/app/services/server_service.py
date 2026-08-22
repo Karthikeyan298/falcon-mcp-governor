@@ -3,7 +3,7 @@ import json
 import sqlite3
 
 from app.database import Database
-from app.exceptions import ConflictError, NotFoundError
+from app.exceptions import BadRequestError, ConflictError, NotFoundError
 from app.formatting import relative_time
 from app.mcp_client import McpClient
 from app.policy_engine import PolicyEngine
@@ -45,7 +45,13 @@ class ServerService:
                 for s in servers_repo.list_all()
             ]
 
+    @staticmethod
+    def _validate_endpoint(endpoint: str) -> None:
+        if not endpoint.startswith(('http://', 'https://')):
+            raise BadRequestError('Endpoint must be an HTTP or HTTPS URL.')
+
     def create(self, *, slug: str, name: str, endpoint: str, trust: str) -> dict:
+        self._validate_endpoint(endpoint)
         with self._database.connect() as conn:
             repo = ServerRepository(conn)
             if repo.exists(slug):
@@ -54,6 +60,7 @@ class ServerService:
             return {'slug': slug, 'name': name, 'endpoint': endpoint, 'toolCount': 0, 'trust': trust, 'lastSynced': 'just now'}
 
     def update(self, slug: str, *, name: str, endpoint: str, trust: str) -> dict:
+        self._validate_endpoint(endpoint)
         with self._database.connect() as conn:
             repo = ServerRepository(conn)
             server = repo.get(slug)

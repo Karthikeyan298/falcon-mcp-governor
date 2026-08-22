@@ -44,6 +44,9 @@
         @for (item of visibleNavItems(); track item.path) {
           <a class="nav-item" [routerLink]="item.path" routerLinkActive="active">
             {{ item.label }}
+            @if (item.path === '/approvals' && state.pendingApprovalCount > 0) {
+              <span class="nav-badge">{{ state.pendingApprovalCount }}</span>
+            }
           </a>
         }
       </nav>

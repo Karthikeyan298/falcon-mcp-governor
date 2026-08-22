@@ -13,23 +13,25 @@ import { SignedToolsComponent } from '../shared/signed-tools.component';
 })
 export class ServersComponent {
   protected state = inject(AppStateService);
-  private api = inject(ApiService);
+  private readonly api = inject(ApiService);
 
   form = { slug: '', name: '', endpoint: '', trust: 'Needs review' };
   saving = false;
   editingSlug: string | null = null;
   errorMessage = '';
 
-  gatewayUrlFor(server: McpServer): string | null {
-    if (!server.endpoint.startsWith('http://') && !server.endpoint.startsWith('https://')) {
-      return null;
-    }
+  gatewayUrlFor(server: McpServer): string {
     return `${API_BASE}/mcp/${server.slug}`;
   }
 
   edit(server: McpServer): void {
     this.editingSlug = server.slug;
-    this.form = { slug: server.slug, name: server.name, endpoint: server.endpoint, trust: server.trust };
+    this.form = {
+      slug: server.slug,
+      name: server.name,
+      endpoint: server.endpoint,
+      trust: server.trust,
+    };
   }
 
   cancelEdit(): void {
@@ -39,16 +41,23 @@ export class ServersComponent {
 
   save(): void {
     if (!this.form.slug || !this.form.name || !this.form.endpoint) return;
+
     this.saving = true;
     this.errorMessage = '';
-    const req = this.editingSlug
+    const obs = this.editingSlug
       ? this.api.updateServer(this.editingSlug, {
           name: this.form.name,
           endpoint: this.form.endpoint,
           trust: this.form.trust,
         })
-      : this.api.addServer(this.form);
-    req.subscribe({
+      : this.api.addServer({
+          slug: this.form.slug,
+          name: this.form.name,
+          endpoint: this.form.endpoint,
+          trust: this.form.trust,
+        });
+
+    obs.subscribe({
       next: () => {
         this.saving = false;
         this.cancelEdit();

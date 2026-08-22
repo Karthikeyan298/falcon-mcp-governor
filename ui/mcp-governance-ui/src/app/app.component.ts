@@ -26,6 +26,7 @@ export class AppComponent implements OnInit {
     { label: 'Policies', path: '/policies' },
     { label: 'Gateway', path: '/gateway' },
     { label: 'Audit', path: '/audit' },
+    { label: 'Approvals', path: '/approvals' },
     { label: 'Account', path: '/account' },
   ];
 
@@ -39,6 +40,7 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     this.state.init();
+    setInterval(() => this.state.refreshApprovals(), 15_000);
   }
 
   login(): void {

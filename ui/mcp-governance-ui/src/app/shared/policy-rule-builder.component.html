@@ -4,6 +4,8 @@
 <p class="empty-state">
   Build one rule at a time and stage it into the YAML — nothing takes effect until you click Deploy.
 </p>
+
+<p class="rule-section-label eyebrow">Action rule</p>
 @if (errorMessage) {
   <div class="error-banner">{{ errorMessage }}</div>
 }
@@ -42,10 +44,90 @@
     <select name="action" [(ngModel)]="form.action">
       <option value="allow">Allow</option>
       <option value="deny">Deny</option>
+      <option value="require_approval">Require approval</option>
     </select>
   </label>
 
   <button class="secondary-btn" type="submit" [disabled]="addingRule || !form.server">
     {{ addingRule ? 'Adding…' : 'Add rule to YAML' }}
+  </button>
+</form>
+
+<div class="rule-divider"></div>
+
+<p class="rule-section-label eyebrow">Parameter rule</p>
+<p class="empty-state" style="margin-bottom: 12px">
+  Conditionally allow, deny, or require approval based on a specific argument value.
+</p>
+@if (paramErrorMessage) {
+  <div class="error-banner">{{ paramErrorMessage }}</div>
+}
+<form class="invoke-form" (ngSubmit)="submitParamRule()">
+  <label>
+    Applies to
+    <select name="pAgentScope" [(ngModel)]="paramForm.agentScope">
+      <option value="">All agents</option>
+      @for (agent of state.agents; track agent.name) {
+        <option [value]="agent.name">{{ agent.name }}</option>
+      }
+    </select>
+  </label>
+
+  <label>
+    Server
+    <select name="pServer" [(ngModel)]="paramForm.server">
+      <option value="">— select —</option>
+      @for (server of state.servers; track server.slug) {
+        <option [value]="server.slug">{{ server.name }}</option>
+      }
+    </select>
+  </label>
+
+  <label>
+    Tool
+    <select name="pTool" [(ngModel)]="paramForm.tool">
+      <option value="">— select —</option>
+      @for (tool of toolsForServer(paramForm.server); track tool.name) {
+        <option [value]="tool.name">{{ tool.name }}</option>
+      }
+    </select>
+  </label>
+
+  <label>
+    Parameter name
+    <input name="pParam" type="text" [(ngModel)]="paramForm.param" placeholder="e.g. recipient" />
+  </label>
+
+  <label>
+    Condition
+    <select name="pOperator" [(ngModel)]="paramForm.operator">
+      @for (op of operators; track op.value) {
+        <option [value]="op.value">{{ op.label }}</option>
+      }
+    </select>
+  </label>
+
+  <label>
+    Value
+    <input name="pValue" type="text" [(ngModel)]="paramForm.value" placeholder="e.g. &#64;company.com" />
+  </label>
+
+  <label>
+    Decision
+    <select name="pDecision" [(ngModel)]="paramForm.decision">
+      <option value="deny">Deny</option>
+      <option value="allow">Allow</option>
+      <option value="require_approval">Require approval</option>
+    </select>
+  </label>
+
+  <label>
+    Reason <small style="color:#6a89b0">(optional)</small>
+    <input name="pReason" type="text" [(ngModel)]="paramForm.reason" placeholder="e.g. External recipient blocked" />
+  </label>
+
+  <button class="secondary-btn" type="submit"
+    [disabled]="addingParamRule || !paramForm.server || !paramForm.tool || !paramForm.param || !paramForm.value">
+    {{ addingParamRule ? 'Adding…' : 'Add param rule to YAML' }}
   </button>
 </form>

@@ -20,9 +20,11 @@ def select_tool(tools: list[dict[str, Any]], keywords: list[str]) -> dict[str, A
     ranked = sorted(tools, key=score, reverse=True)
     best = ranked[0]
     if score(best) == 0:
-        # No keyword match at all - fall back to the only/first tool rather
-        # than failing outright.
-        return best
+        raise RuntimeError(
+            f"No tool matched keywords {keywords}. "
+            f"Available: {[t['name'] for t in tools]}. "
+            "The required tool may be blocked by policy."
+        )
     return best
 
 

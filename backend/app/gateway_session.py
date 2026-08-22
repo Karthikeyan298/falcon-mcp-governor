@@ -23,10 +23,19 @@ class GatewaySessionStore:
     def __init__(self):
         self._sessions: dict[str, GatewaySession] = {}
 
-    def create(self, *, slug: str, endpoint: str, upstream_session_id: str | None, agent: str, user: str) -> str:
+    def create(
+        self,
+        *,
+        slug: str,
+        endpoint: str,
+        upstream_session_id: str | None,
+        agent: str,
+        user: str,
+    ) -> str:
         session_id = uuid.uuid4().hex
         self._sessions[session_id] = GatewaySession(
-            slug=slug, endpoint=endpoint, upstream_session_id=upstream_session_id, agent=agent, user=user,
+            slug=slug, endpoint=endpoint, upstream_session_id=upstream_session_id,
+            agent=agent, user=user,
         )
         return session_id
 

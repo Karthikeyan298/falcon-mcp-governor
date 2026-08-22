@@ -1,17 +1,15 @@
-"""Minimal MCP client for the streamable-HTTP transport.
+"""MCP client for the streamable-HTTP transport.
 
-`McpClient` speaks just enough of the protocol (initialize ->
-notifications/initialized -> tools/list / tools/call / ...) to (a) sync a
-real MCP server's tool list into the control plane's local registry, and (b)
-proxy real agent traffic through the governance gateway. Deliberately
-hand-rolled with httpx instead of the official `mcp` SDK, whose latest
-release pulls in a starlette/pydantic version that conflicts with this
-project's pinned FastAPI.
+Speaks just enough of the protocol (initialize -> notifications/initialized ->
+tools/list / tools/call / ...) to (a) sync a real MCP server's tool list into
+the control plane's local registry, and (b) proxy real agent traffic through
+the governance gateway. Deliberately hand-rolled with httpx instead of the
+official `mcp` SDK, whose latest release pulls in a starlette/pydantic version
+that conflicts with this project's pinned FastAPI.
 
 The streamable-HTTP transport is stateless at the connection level -- session
 continuity is carried entirely by the `mcp-session-id` header, so every call
 here opens a fresh short-lived HTTP request rather than holding a socket open.
-Each `McpClient` instance simply remembers which endpoint it talks to.
 """
 
 import json

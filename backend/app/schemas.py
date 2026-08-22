@@ -15,6 +15,18 @@ class PolicyRuleUpsert(BaseModel):
     action: str
 
 
+class PolicyParamRuleUpsert(BaseModel):
+    yaml: str
+    agent: str | None = None
+    server: str
+    tool: str
+    param: str
+    operator: str
+    value: str
+    decision: str = 'deny'
+    reason: str = ''
+
+
 class GatewayInvokeRequest(BaseModel):
     agent: str
     server: str

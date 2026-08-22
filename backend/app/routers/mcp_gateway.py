@@ -9,9 +9,18 @@ import json
 from fastapi import APIRouter, Depends, Request, Response
 
 from app.dependencies import get_mcp_gateway_service
+from app.exceptions import BadRequestError, NotFoundError, UnauthorizedError
+from app.mcp_client import McpDiscoveryError
 from app.services.mcp_gateway_service import McpGatewayResponse, McpGatewayService
 
 router = APIRouter()
+
+# JSON-RPC error codes for gateway-level failures.
+# -32001 / -32002 are in the implementation-defined range (-32099 to -32000).
+_JSONRPC_UNAUTHORIZED = -32001
+_JSONRPC_NOT_FOUND = -32002
+_JSONRPC_INVALID_REQUEST = -32600
+_JSONRPC_INTERNAL = -32603
 
 
 def _to_http_response(result: McpGatewayResponse) -> Response:
@@ -26,11 +35,29 @@ def _to_http_response(result: McpGatewayResponse) -> Response:
     )
 
 
+def _error_response(req_id, code: int, message: str, http_status: int) -> Response:
+    """Return a JSON-RPC error as an SSE event so MCP clients can parse it."""
+    payload = {'jsonrpc': '2.0', 'id': req_id, 'error': {'code': code, 'message': message}}
+    return Response(
+        content=f'event: message\ndata: {json.dumps(payload)}\n\n',
+        media_type='text/event-stream',
+        status_code=http_status,
+    )
+
+
 @router.post('/mcp/{slug}')
 async def mcp_gateway(slug: str, request: Request, service: McpGatewayService = Depends(get_mcp_gateway_service)):
     body = await request.json()
-    result = service.handle_request(slug, body, request.headers)
-    return _to_http_response(result)
+    req_id = body.get('id')
+    try:
+        result = service.handle_request(slug, body, request.headers)
+        return _to_http_response(result)
+    except UnauthorizedError as exc:
+        return _error_response(req_id, _JSONRPC_UNAUTHORIZED, str(exc), 401)
+    except (BadRequestError, NotFoundError) as exc:
+        return _error_response(req_id, _JSONRPC_INVALID_REQUEST, str(exc), 400)
+    except McpDiscoveryError:
+        return _error_response(req_id, _JSONRPC_INTERNAL, 'Upstream service error.', 502)
 
 
 @router.get('/mcp/{slug}')

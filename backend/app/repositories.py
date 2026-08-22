@@ -154,11 +154,12 @@ class AuditRepository:
     def log(
         self, *, agent: str, server: str | None, tool: str, action: str,
         decision: str, user: str, reason: str | None, created_at: str,
+        arguments: str | None = None,
     ) -> None:
         self._conn.execute(
-            'INSERT INTO audit (agent, server, tool, action, decision, user, reason, created_at) '
-            'VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            (agent, server, tool, action, decision, user, reason, created_at),
+            'INSERT INTO audit (agent, server, tool, action, decision, user, reason, arguments, created_at) '
+            'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            (agent, server, tool, action, decision, user, reason, arguments, created_at),
         )
 
 
@@ -231,3 +232,59 @@ class SessionRepository:
 
     def delete_for_user(self, user_id: int) -> None:
         self._conn.execute('DELETE FROM sessions WHERE user_id = ?', (user_id,))
+
+
+class ApprovalRepository:
+    def __init__(self, conn: sqlite3.Connection):
+        self._conn = conn
+
+    def list_recent(self, limit: int = 200) -> list[dict]:
+        rows = self._conn.execute(
+            'SELECT * FROM approvals ORDER BY id DESC LIMIT ?', (limit,)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def count_pending(self) -> int:
+        return self._conn.execute(
+            "SELECT COUNT(*) c FROM approvals WHERE status = 'pending'"
+        ).fetchone()['c']
+
+    def get(self, approval_id: int) -> dict | None:
+        row = self._conn.execute('SELECT * FROM approvals WHERE id = ?', (approval_id,)).fetchone()
+        return dict(row) if row else None
+
+    def claim_approved(self, agent: str, server: str, tool: str) -> dict | None:
+        """Atomically claim the oldest approved-but-unexecuted record for this
+        (agent, server, tool) triple. Returns the row if one was found."""
+        row = self._conn.execute(
+            "SELECT * FROM approvals WHERE agent = ? AND server = ? AND tool = ? AND status = 'approved' "
+            'ORDER BY id ASC LIMIT 1',
+            (agent, server, tool),
+        ).fetchone()
+        if row is None:
+            return None
+        self._conn.execute("UPDATE approvals SET status = 'executed' WHERE id = ?", (row['id'],))
+        return dict(row)
+
+    def create(
+        self, *, agent: str, server: str, tool: str, arguments: str,
+        user: str, created_at: str,
+    ) -> int:
+        cur = self._conn.execute(
+            'INSERT INTO approvals (agent, server, tool, arguments, user, status, created_at) '
+            'VALUES (?, ?, ?, ?, ?, ?, ?)',
+            (agent, server, tool, arguments, user, 'pending', created_at),
+        )
+        return cur.lastrowid
+
+    def decide(self, approval_id: int, status: str, decision_by: str, decided_at: str) -> None:
+        self._conn.execute(
+            'UPDATE approvals SET status = ?, decision_by = ?, decided_at = ? WHERE id = ?',
+            (status, decision_by, decided_at, approval_id),
+        )
+
+    def update_executed(self, approval_id: int, result: str, decided_at: str) -> None:
+        self._conn.execute(
+            "UPDATE approvals SET status = 'executed', result = ?, decided_at = ? WHERE id = ?",
+            (result, decided_at, approval_id),
+        )
