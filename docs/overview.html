@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Falcon — AI Agent Governance for the Enterprise</title>
+<link rel="icon" type="image/png" href="falcon-mark.png" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -57,6 +58,12 @@
     font-size: 1.1rem;
     color: var(--text-head);
     text-decoration: none;
+  }
+
+  .brand img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
   }
 
   .brand-tag {
@@ -548,7 +555,8 @@
 <!-- ── Top nav ── -->
 <header>
   <a class="brand" href="#">
-    🦅 Falcon
+    <img src="falcon-mark.png" alt="Falcon logo" />
+    Falcon
     <span class="brand-tag">Enterprise</span>
   </a>
   <ul class="nav-links">
@@ -563,6 +571,7 @@
 
 <!-- ── Hero ── -->
 <div class="hero">
+  <img src="falcon-mark.png" alt="Falcon" style="width:90px;height:90px;object-fit:contain;margin-bottom:24px;" />
   <div class="hero-eyebrow">AI Agent Governance Platform</div>
   <h1>Control every AI agent.<br /><span>Protect every system.</span></h1>
   <p>
@@ -1202,7 +1211,10 @@
 
 <!-- ── Footer ── -->
 <footer>
-  <div>🦅 <strong style="color: var(--text-head);">Falcon</strong> — MCP Governance Gateway</div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <img src="falcon-mark.png" alt="Falcon" style="width:22px;height:22px;object-fit:contain;opacity:.85;" />
+    <strong style="color: var(--text-head);">Falcon</strong> — MCP Governance Gateway
+  </div>
   <div style="display: flex; gap: 20px;">
     <a href="index.html">Technical docs</a>
     <a href="https://github.com/Karthikeyan298/falcon-mcp-governor" target="_blank">GitHub</a>

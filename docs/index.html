@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Falcon — MCP Governance Gateway Documentation</title>
+<link rel="icon" type="image/png" href="falcon-mark.png" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -61,16 +62,27 @@
     padding: 20px 20px 16px;
     border-bottom: 1px solid var(--border);
     margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
-  .nav-brand h1 {
+  .nav-brand img {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  .nav-brand-text h1 {
     font-size: 1.15rem;
     color: var(--text-head);
     font-weight: 700;
     letter-spacing: -0.01em;
+    line-height: 1.2;
   }
 
-  .nav-brand span {
+  .nav-brand-text span {
     font-size: 11px;
     color: var(--text-dim);
     letter-spacing: 0.04em;
@@ -299,8 +311,11 @@
 <!-- ── Sidebar navigation ── -->
 <nav id="sidebar">
   <div class="nav-brand">
-    <h1>🦅 Falcon</h1>
-    <span>MCP Governance Gateway</span>
+    <img src="falcon-mark.png" alt="Falcon logo" />
+    <div class="nav-brand-text">
+      <h1>Falcon</h1>
+      <span>MCP Governance Gateway</span>
+    </div>
   </div>
 
   <div class="nav-section">Getting Started</div>
