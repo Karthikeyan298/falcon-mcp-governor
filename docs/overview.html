@@ -498,6 +498,39 @@
     margin: 0 auto;
   }
 
+  /* ── Compliance mapping table ── */
+  .compliance-map {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+
+  .compliance-map th, .compliance-map td {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .compliance-map thead th {
+    background: rgba(59,130,246,.08);
+    color: var(--text-head);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-align: center;
+  }
+
+  .compliance-map thead th:first-child { text-align: left; }
+
+  .compliance-map tbody tr:nth-child(even) td { background: rgba(255,255,255,.018); }
+
+  .compliance-map td.c { text-align: center; font-size: 13px; }
+  .compliance-map td.yes { color: #34d399; }
+  .compliance-map td.dim { color: #2a4060; }
+
   /* ── Responsive ── */
   @media (max-width: 760px) {
     header { padding: 0 20px; }
@@ -893,55 +926,212 @@
 <!-- ── Compliance ── -->
 <section id="compliance">
   <div class="section-label">Compliance &amp; governance</div>
-  <h2>Designed for regulated environments.</h2>
+  <h2>Aligns with <span style="background:linear-gradient(90deg,#60a5fa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">12 compliance frameworks</span>.</h2>
   <p class="section-sub">
-    Falcon's audit trail, access controls, and human oversight workflows directly address
-    requirements across major regulatory frameworks.
+    Falcon's audit trail, access controls, human oversight workflows, and anomaly detection
+    directly address requirements across the major regulatory and security frameworks your
+    customers and auditors care about.
   </p>
 
+  <!-- count summary bar -->
+  <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:40px;">
+    <span class="tag" style="font-size:12px;padding:5px 14px;">🔒 SOC 2 Type II</span>
+    <span class="tag" style="font-size:12px;padding:5px 14px;">🏥 HIPAA</span>
+    <span class="tag" style="font-size:12px;padding:5px 14px;">💳 PCI-DSS v4</span>
+    <span class="tag" style="font-size:12px;padding:5px 14px;">🇪🇺 EU AI Act</span>
+    <span class="tag" style="font-size:12px;padding:5px 14px;">🛡️ ISO 27001</span>
+    <span class="tag" style="font-size:12px;padding:5px 14px;">🇪🇺 GDPR</span>
+    <span class="tag" style="font-size:12px;padding:5px 14px;">🏛️ NIST AI RMF</span>
+    <span class="tag" style="font-size:12px;padding:5px 14px;">📐 NIST CSF 2.0</span>
+    <span class="tag" style="font-size:12px;padding:5px 14px;">📊 SOX</span>
+    <span class="tag" style="font-size:12px;padding:5px 14px;">🏦 DORA</span>
+    <span class="tag" style="font-size:12px;padding:5px 14px;">🛡️ CMMC 2.0</span>
+    <span class="tag" style="font-size:12px;padding:5px 14px;">🏠 CCPA / CPRA</span>
+  </div>
+
+  <!-- capability → framework mapping table -->
+  <div style="overflow-x:auto;margin-bottom:40px;">
+    <table class="compliance-map">
+      <thead>
+        <tr>
+          <th style="min-width:180px;">Falcon capability</th>
+          <th>SOC 2</th>
+          <th>HIPAA</th>
+          <th>PCI-DSS</th>
+          <th>EU AI Act</th>
+          <th>ISO 27001</th>
+          <th>GDPR</th>
+          <th>NIST AI RMF</th>
+          <th>NIST CSF</th>
+          <th>SOX</th>
+          <th>DORA</th>
+          <th>CMMC</th>
+          <th>CCPA</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Immutable audit trail</strong></td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td>
+        </tr>
+        <tr>
+          <td><strong>Agent identity &amp; access control</strong></td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td>
+        </tr>
+        <tr>
+          <td><strong>Human-in-the-loop approvals</strong></td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c dim">—</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c dim">—</td>
+        </tr>
+        <tr>
+          <td><strong>Least-privilege policy engine</strong></td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td>
+        </tr>
+        <tr>
+          <td><strong>Anomaly detection &amp; alerting</strong></td>
+          <td class="c yes">✓</td><td class="c dim">—</td><td class="c yes">✓</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c dim">—</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c dim">—</td>
+        </tr>
+        <tr>
+          <td><strong>Tool trust registry</strong></td>
+          <td class="c yes">✓</td><td class="c dim">—</td><td class="c yes">✓</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c dim">—</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c dim">—</td>
+          <td class="c yes">✓</td><td class="c yes">✓</td><td class="c dim">—</td>
+        </tr>
+        <tr>
+          <td><strong>Parameter-level data rules</strong></td>
+          <td class="c dim">—</td><td class="c yes">✓</td><td class="c yes">✓</td>
+          <td class="c dim">—</td><td class="c dim">—</td><td class="c yes">✓</td>
+          <td class="c dim">—</td><td class="c dim">—</td><td class="c dim">—</td>
+          <td class="c dim">—</td><td class="c dim">—</td><td class="c yes">✓</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- framework detail cards -->
   <div class="compliance-grid">
     <div class="compliance-card">
       <span class="ci">🔒</span>
       <div>
         <h4>SOC 2 Type II</h4>
-        <p>Immutable audit logs, access controls, and anomaly alerting support the Security and Availability trust service criteria.</p>
+        <p>Immutable audit logs, role-based access, and anomaly alerting directly satisfy the Security, Availability, and Confidentiality trust service criteria.</p>
+        <p style="margin-top:6px;font-size:11px;color:#3b82f6;">CC6, CC7, A1</p>
       </div>
     </div>
     <div class="compliance-card">
       <span class="ci">🏥</span>
       <div>
         <h4>HIPAA</h4>
-        <p>Agent identity verification and per-call logging satisfy the technical safeguard requirements for access control and audit controls.</p>
+        <p>Per-agent identity verification, per-call logging, and parameter-level data rules satisfy Technical Safeguard requirements for access control and audit controls under 45 CFR § 164.312.</p>
+        <p style="margin-top:6px;font-size:11px;color:#3b82f6;">§ 164.312(a)(1), (b), (d)</p>
       </div>
     </div>
     <div class="compliance-card">
       <span class="ci">💳</span>
       <div>
-        <h4>PCI-DSS</h4>
-        <p>Least-privilege policy enforcement and complete access logging address cardholder data environment access control requirements.</p>
+        <h4>PCI-DSS v4</h4>
+        <p>Least-privilege policy enforcement, complete access logging, and anomaly detection for AI agents operating in or near cardholder data environments.</p>
+        <p style="margin-top:6px;font-size:11px;color:#3b82f6;">Req 7, 8, 10, 11</p>
       </div>
     </div>
     <div class="compliance-card">
       <span class="ci">🇪🇺</span>
       <div>
         <h4>EU AI Act</h4>
-        <p>Human-in-the-loop approval flows and audit trails align with high-risk AI system requirements for human oversight and logging.</p>
+        <p>Human-in-the-loop approval workflows and comprehensive logging directly satisfy human oversight requirements for high-risk AI systems under Article 14 and 17.</p>
+        <p style="margin-top:6px;font-size:11px;color:#3b82f6;">Art. 9, 12, 13, 14, 17</p>
+      </div>
+    </div>
+    <div class="compliance-card">
+      <span class="ci">🛡️</span>
+      <div>
+        <h4>ISO 27001:2022</h4>
+        <p>Access management controls, audit logging, anomaly detection, and policy-as-code map to Annex A controls for access control, operations security, and monitoring.</p>
+        <p style="margin-top:6px;font-size:11px;color:#3b82f6;">A.5.15, A.8.2, A.8.15, A.8.16</p>
+      </div>
+    </div>
+    <div class="compliance-card">
+      <span class="ci">🇪🇺</span>
+      <div>
+        <h4>GDPR</h4>
+        <p>Parameter-level rules restrict agents from accessing personal data beyond their purpose. Immutable logs enable demonstrable accountability (Art. 5(2)) and data access records for subject requests.</p>
+        <p style="margin-top:6px;font-size:11px;color:#3b82f6;">Art. 5, 25, 30, 32</p>
       </div>
     </div>
     <div class="compliance-card">
       <span class="ci">🏛️</span>
       <div>
-        <h4>ISO 27001</h4>
-        <p>Access management controls, logging, and anomaly detection map to Annex A controls for information security, operations security, and monitoring.</p>
+        <h4>NIST AI RMF</h4>
+        <p>Supports all four core functions — GOVERN (policy deployment), MAP (tool registry), MEASURE (anomaly detection), and MANAGE (approval workflow) — of the AI Risk Management Framework.</p>
+        <p style="margin-top:6px;font-size:11px;color:#3b82f6;">GOVERN, MAP, MEASURE, MANAGE</p>
       </div>
     </div>
     <div class="compliance-card">
-      <span class="ci">📜</span>
+      <span class="ci">📐</span>
       <div>
-        <h4>Internal policy enforcement</h4>
-        <p>Policy-as-code in YAML means your internal governance rules are version-controlled, reviewable, and deployed consistently across all environments.</p>
+        <h4>NIST CSF 2.0</h4>
+        <p>Covers IDENTIFY (asset registry), PROTECT (least-privilege policy), DETECT (anomaly alerts), RESPOND (approval workflow), and GOVERN (policy-as-code) functions.</p>
+        <p style="margin-top:6px;font-size:11px;color:#3b82f6;">ID, PR, DE, RS, GV</p>
       </div>
     </div>
+    <div class="compliance-card">
+      <span class="ci">📊</span>
+      <div>
+        <h4>SOX (Sarbanes-Oxley)</h4>
+        <p>Immutable audit trail of all AI agent actions on financial systems, with human approval gates for material operations, supports IT General Controls (ITGC) evidence for Section 404 audits.</p>
+        <p style="margin-top:6px;font-size:11px;color:#3b82f6;">Section 302, 404 — ITGC</p>
+      </div>
+    </div>
+    <div class="compliance-card">
+      <span class="ci">🏦</span>
+      <div>
+        <h4>DORA (EU Financial)</h4>
+        <p>ICT incident detection via anomaly alerting, complete audit records for ICT-related operations, and human oversight of automated actions on financial infrastructure align with DORA's operational resilience requirements.</p>
+        <p style="margin-top:6px;font-size:11px;color:#3b82f6;">Art. 10, 17, 18</p>
+      </div>
+    </div>
+    <div class="compliance-card">
+      <span class="ci">🛡️</span>
+      <div>
+        <h4>CMMC 2.0</h4>
+        <p>Access control, audit and accountability, configuration management, and incident response practices for AI agents operating in or supporting defense-contracting environments.</p>
+        <p style="margin-top:6px;font-size:11px;color:#3b82f6;">AC, AU, CM, IR domains</p>
+      </div>
+    </div>
+    <div class="compliance-card">
+      <span class="ci">🏠</span>
+      <div>
+        <h4>CCPA / CPRA</h4>
+        <p>Parameter-level rules prevent agents from exfiltrating personal information beyond defined purpose. Audit logs provide the access records needed to respond to consumer data requests.</p>
+        <p style="margin-top:6px;font-size:11px;color:#3b82f6;">Cal. Civ. Code § 1798.100+</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--bg-card2);border:1px solid var(--border);border-radius:14px;padding:24px;margin-top:24px;display:flex;gap:16px;align-items:flex-start;">
+    <span style="font-size:20px;flex-shrink:0;">ℹ️</span>
+    <p style="margin:0;font-size:13.5px;color:var(--text-dim);line-height:1.65;">
+      <strong style="color:var(--text-head);">Note on compliance scope.</strong>
+      Falcon provides technical controls that <em>support</em> compliance with these frameworks — it does not
+      certify or guarantee compliance on its own. Your organization's full compliance posture depends
+      on processes, people, and additional controls beyond what any single tool provides.
+      Always engage your compliance and legal teams to validate alignment with specific requirements.
+    </p>
   </div>
 </section>
 
