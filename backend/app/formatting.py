@@ -2,7 +2,8 @@
 
 from datetime import datetime, timezone
 
-_DECISION_LABELS = {'allow': 'Allowed', 'deny': 'Denied'}
+_DECISION_LABELS = {'allow': 'Allowed', 'deny': 'Denied', 'require_approval': 'Pending'}
+_POLICY_STATUS_LABELS = {'allow': 'Allowed', 'deny': 'Denied', 'require_approval': 'Require approval'}
 
 
 def relative_time(iso_ts: str) -> str:
@@ -27,3 +28,7 @@ def clock_time(iso_ts: str) -> str:
 
 def decision_label(decision: str) -> str:
     return _DECISION_LABELS[decision]
+
+
+def policy_status_label(decision: str) -> str:
+    return _POLICY_STATUS_LABELS.get(decision, decision)

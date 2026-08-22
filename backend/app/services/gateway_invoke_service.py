@@ -3,6 +3,7 @@ from app.exceptions import NotFoundError
 from app.formatting import decision_label
 from app.policy_engine import PolicyEngine
 from app.repositories import AuditRepository, ServerRepository, SettingsRepository, ToolRepository, TrustRepository
+from app.services.anomaly_service import AnomalyDetector
 
 
 class GatewayInvokeService:
@@ -39,6 +40,10 @@ class GatewayInvokeService:
             audit_repo.log(
                 agent=agent, server=server, tool=tool, action='invoke',
                 decision=label, user=user, reason=outcome.reason, created_at=now,
+            )
+
+            AnomalyDetector(self._database).check_with_conn(
+                conn, agent=agent, server=server, tool=tool, decision=label, now=now,
             )
 
             result = None

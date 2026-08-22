@@ -26,6 +26,8 @@ export class AppComponent implements OnInit {
     { label: 'Policies', path: '/policies' },
     { label: 'Gateway', path: '/gateway' },
     { label: 'Audit', path: '/audit' },
+    { label: 'Approvals', path: '/approvals' },
+    { label: 'Alerts', path: '/alerts' },
     { label: 'Account', path: '/account' },
   ];
 

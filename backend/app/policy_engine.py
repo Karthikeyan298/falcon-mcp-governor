@@ -57,6 +57,7 @@ import yaml
 ACTION_TO_DECISION = {
     'allow': 'allow',
     'deny': 'deny',
+    'require_approval': 'require_approval',
 }
 
 RISK_TO_DEFAULT_ACTION = {
@@ -131,6 +132,9 @@ class PolicyEngine:
         if action == 'deny':
             return Decision('deny', 'Blocked by policy rule')
 
+        if action == 'require_approval':
+            return Decision('require_approval', 'This operation requires human approval before it can be executed')
+
         if param_decision is not None:
             return param_decision
 
@@ -156,6 +160,42 @@ class PolicyEngine:
 
         return self._dump(parsed)
 
+    def upsert_param_rule(
+        self, policy_yaml: str, *,
+        agent: str | None, server: str, tool: str,
+        param: str, operator: str, value: str, decision: str, reason: str,
+    ) -> str:
+        """Append (or replace) a param_rule for a specific tool.
+
+        Replaces an existing rule with the same param + operator; appends
+        if none exists. Only the `action` block for the tool is created if
+        missing; any existing action or other param_rules are left intact.
+        """
+        if operator not in _PARAM_RULE_OPERATORS:
+            raise InvalidPolicyError(f"Unknown operator '{operator}'; valid: {list(_PARAM_RULE_OPERATORS)}")
+        if decision not in ACTION_TO_DECISION:
+            raise InvalidPolicyError(f"Invalid decision '{decision}'; must be one of {list(ACTION_TO_DECISION)}")
+
+        parsed = self.parse(policy_yaml)
+
+        if agent:
+            servers_cfg = parsed.setdefault('agent_overrides', {}).setdefault(agent, {}).setdefault('servers', {})
+        else:
+            servers_cfg = parsed.setdefault('servers', {})
+
+        tool_cfg = servers_cfg.setdefault(server, {}).setdefault('tools', {}).setdefault(tool, {})
+        param_rules: list = tool_cfg.setdefault('param_rules', [])
+
+        new_rule = {'param': param, operator: value, 'decision': decision, 'reason': reason}
+
+        for i, existing in enumerate(param_rules):
+            if existing.get('param') == param and operator in existing:
+                param_rules[i] = new_rule
+                return self._dump(parsed)
+
+        param_rules.append(new_rule)
+        return self._dump(parsed)
+
     def upsert_rule(self, policy_yaml: str, *, agent: str | None, server: str, tool: str, action: str) -> str:
         """Set (creating or overwriting) a single rule's action -- the backing
         logic for the UI rule builder.
@@ -166,7 +206,7 @@ class PolicyEngine:
         already configured for that tool are preserved.
         """
         if action not in ACTION_TO_DECISION:
-            raise InvalidPolicyError(f"Invalid action '{action}'; must be one of allow, deny")
+            raise InvalidPolicyError(f"Invalid action '{action}'; must be one of {list(ACTION_TO_DECISION)}")
 
         parsed = self.parse(policy_yaml)
 

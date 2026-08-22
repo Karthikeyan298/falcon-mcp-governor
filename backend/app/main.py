@@ -19,7 +19,7 @@ from app.database import get_database
 from app.exceptions import BadRequestError, ConflictError, ForbiddenError, NotFoundError, UnauthorizedError
 from app.mcp_client import McpDiscoveryError
 from app.policy_engine import InvalidPolicyError
-from app.routers import agents, audit, auth, dashboard, gateway, mcp_gateway, policies, servers, tools, users
+from app.routers import agents, alerts, approvals, audit, auth, dashboard, gateway, mcp_gateway, policies, servers, tools, users
 from app.services.auth_service import SESSION_COOKIE_NAME, AuthService
 
 
@@ -120,6 +120,8 @@ async def handle_mcp_discovery_error(_: Request, exc: McpDiscoveryError):
 
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(alerts.router)
+app.include_router(approvals.router)
 app.include_router(dashboard.router)
 app.include_router(agents.router)
 app.include_router(servers.router)

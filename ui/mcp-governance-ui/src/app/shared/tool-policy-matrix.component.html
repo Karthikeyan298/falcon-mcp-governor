@@ -1,34 +1,67 @@
 <div class="panel-header">
   <h3>Tool policy matrix</h3>
-  <button class="ghost-btn" type="button" (click)="goToPolicies()">Edit policies</button>
+  <span class="matrix-count">
+    {{ filteredRows.length }} tool{{ filteredRows.length === 1 ? '' : 's' }}
+  </span>
 </div>
-<div class="panel-scroll">
-  <table>
-    <thead>
-      <tr>
-        <th>Tool</th>
-        <th>Server</th>
-        <th>Status</th>
-        <th>Signed</th>
-        <th>Risk</th>
-        <th>Environment</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (tool of state.toolPolicies; track tool.name) {
-        <tr>
-          <td>{{ tool.name }}</td>
-          <td>{{ tool.server }}</td>
-          <td>
-            <span class="badge" [ngClass]="{ allowed: tool.status === 'Allowed', blocked: tool.status === 'Denied' }">
-              {{ tool.status }}
-            </span>
-          </td>
-          <td>{{ tool.signed ? 'Yes' : 'No' }}</td>
-          <td>{{ tool.risk }}</td>
-          <td>{{ tool.environment }}</td>
-        </tr>
+
+<div class="invoke-form">
+  <label>
+    Agent
+    <select [(ngModel)]="filterAgent" (ngModelChange)="onAgentChange()">
+      <option value="">All agents</option>
+      @for (agent of state.agents; track agent.name) {
+        <option [value]="agent.name">{{ agent.name }}</option>
       }
-    </tbody>
-  </table>
+    </select>
+  </label>
+
+  <label>
+    Server
+    <select [(ngModel)]="filterServer">
+      <option value="">All servers</option>
+      @for (s of uniqueServers; track s.slug) {
+        <option [value]="s.slug">{{ s.name }}</option>
+      }
+    </select>
+  </label>
+</div>
+
+<div class="panel-scroll">
+  @if (loading) {
+    <p class="empty-state">Loading…</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Tool</th>
+          <th>Server</th>
+          <th>Status</th>
+          <th>Signed</th>
+          <th>Risk</th>
+          <th>Environment</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (tool of filteredRows; track tool.name + tool.serverSlug) {
+          <tr>
+            <td>{{ tool.name }}</td>
+            <td>{{ tool.server }}</td>
+            <td>
+              <span class="badge" [ngClass]="{
+                allowed: tool.status === 'Allowed',
+                blocked: tool.status === 'Denied',
+                pending: tool.status === 'Require approval'
+              }">{{ tool.status }}</span>
+            </td>
+            <td>{{ tool.signed ? 'Yes' : 'No' }}</td>
+            <td>{{ tool.risk }}</td>
+            <td>{{ tool.environment }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty-state">No tools match the current filters.</td></tr>
+        }
+      </tbody>
+    </table>
+  }
 </div>

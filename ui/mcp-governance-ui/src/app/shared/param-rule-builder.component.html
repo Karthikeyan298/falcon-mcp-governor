@@ -1,0 +1,77 @@
+<div class="panel-header">
+  <h3>Param rule builder</h3>
+</div>
+<p class="empty-state">
+  Block, allow, or flag tool calls based on argument values. Staged into the YAML — deploy to activate.
+</p>
+@if (errorMessage) {
+  <div class="error-banner">{{ errorMessage }}</div>
+}
+<form class="invoke-form" (ngSubmit)="submit()">
+  <label>
+    Applies to
+    <select name="agentScope" [(ngModel)]="form.agentScope">
+      <option value="">All agents</option>
+      @for (agent of state.agents; track agent.name) {
+        <option [value]="agent.name">{{ agent.name }}</option>
+      }
+    </select>
+  </label>
+
+  <label>
+    Server
+    <select name="server" [(ngModel)]="form.server">
+      <option value="" disabled>Select server</option>
+      @for (server of state.servers; track server.slug) {
+        <option [value]="server.slug">{{ server.name }}</option>
+      }
+    </select>
+  </label>
+
+  <label>
+    Tool
+    <select name="tool" [(ngModel)]="form.tool">
+      <option value="*">All tools (*)</option>
+      @for (tool of toolsForServer(form.server); track tool.name) {
+        <option [value]="tool.name">{{ tool.name }}</option>
+      }
+    </select>
+  </label>
+
+  <label>
+    Parameter
+    <input name="param" type="text" placeholder="e.g. recipient" [(ngModel)]="form.param" required />
+  </label>
+
+  <label>
+    Operator
+    <select name="operator" [(ngModel)]="form.operator">
+      @for (op of operators; track op.value) {
+        <option [value]="op.value">{{ op.label }}</option>
+      }
+    </select>
+  </label>
+
+  <label>
+    Value
+    <input name="value" type="text" placeholder="e.g. @external.com" [(ngModel)]="form.value" required />
+  </label>
+
+  <label>
+    Decision
+    <select name="decision" [(ngModel)]="form.decision">
+      @for (d of decisions; track d.value) {
+        <option [value]="d.value">{{ d.label }}</option>
+      }
+    </select>
+  </label>
+
+  <label>
+    Reason
+    <input name="reason" type="text" placeholder="e.g. External recipient blocked" [(ngModel)]="form.reason" />
+  </label>
+
+  <button class="secondary-btn" type="submit" [disabled]="adding || !form.server || !form.param || !form.value">
+    {{ adding ? 'Adding…' : 'Add param rule to YAML' }}
+  </button>
+</form>

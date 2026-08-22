@@ -166,11 +166,12 @@ class SettingsRepository:
     def __init__(self, conn: sqlite3.Connection):
         self._conn = conn
 
-    def get(self, key: str) -> str:
-        return self._conn.execute('SELECT value FROM settings WHERE key = ?', (key,)).fetchone()['value']
+    def get(self, key: str, default: str | None = None) -> str | None:
+        row = self._conn.execute('SELECT value FROM settings WHERE key = ?', (key,)).fetchone()
+        return row['value'] if row else default
 
     def set(self, key: str, value: str) -> None:
-        self._conn.execute('UPDATE settings SET value = ? WHERE key = ?', (value, key))
+        self._conn.execute('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', (key, value))
 
 
 class UserRepository:
@@ -207,6 +208,82 @@ class UserRepository:
 
     def delete(self, user_id: int) -> None:
         self._conn.execute('DELETE FROM users WHERE id = ?', (user_id,))
+
+
+class AlertRepository:
+    def __init__(self, conn: sqlite3.Connection):
+        self._conn = conn
+
+    def create(self, *, type: str, severity: str, agent: str, server: str | None, tool: str | None, message: str, created_at: str) -> int:
+        cur = self._conn.execute(
+            'INSERT INTO alerts (type, severity, agent, server, tool, message, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            (type, severity, agent, server, tool, message, created_at),
+        )
+        return cur.lastrowid
+
+    def list_recent(self, limit: int = 100) -> list[dict]:
+        rows = self._conn.execute('SELECT * FROM alerts ORDER BY id DESC LIMIT ?', (limit,)).fetchall()
+        return [dict(r) for r in rows]
+
+    def count_unacknowledged(self) -> int:
+        return self._conn.execute('SELECT COUNT(*) c FROM alerts WHERE acknowledged_at IS NULL').fetchone()['c']
+
+    def get(self, alert_id: int) -> dict | None:
+        row = self._conn.execute('SELECT * FROM alerts WHERE id = ?', (alert_id,)).fetchone()
+        return dict(row) if row else None
+
+    def acknowledge(self, alert_id: int, by: str, at: str) -> None:
+        self._conn.execute(
+            'UPDATE alerts SET acknowledged_at = ?, acknowledged_by = ? WHERE id = ?',
+            (at, by, alert_id),
+        )
+
+    def exists_unacknowledged(self, alert_type: str, agent: str) -> bool:
+        return self._conn.execute(
+            'SELECT 1 FROM alerts WHERE type = ? AND agent = ? AND acknowledged_at IS NULL',
+            (alert_type, agent),
+        ).fetchone() is not None
+
+    def has_alert_for_tool(self, alert_type: str, agent: str, server: str, tool: str) -> bool:
+        return self._conn.execute(
+            'SELECT 1 FROM alerts WHERE type = ? AND agent = ? AND server = ? AND tool = ?',
+            (alert_type, agent, server, tool),
+        ).fetchone() is not None
+
+
+class ApprovalRepository:
+    def __init__(self, conn: sqlite3.Connection):
+        self._conn = conn
+
+    def create(self, *, agent: str, server: str, tool: str, arguments: str | None, user: str, created_at: str) -> int:
+        cur = self._conn.execute(
+            'INSERT INTO approvals (agent, server, tool, arguments, user, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+            (agent, server, tool, arguments, user, created_at),
+        )
+        return cur.lastrowid
+
+    def get(self, approval_id: int) -> dict | None:
+        row = self._conn.execute('SELECT * FROM approvals WHERE id = ?', (approval_id,)).fetchone()
+        return dict(row) if row else None
+
+    def list_recent(self, limit: int = 200) -> list[dict]:
+        rows = self._conn.execute('SELECT * FROM approvals ORDER BY id DESC LIMIT ?', (limit,)).fetchall()
+        return [dict(r) for r in rows]
+
+    def count_pending(self) -> int:
+        return self._conn.execute("SELECT COUNT(*) c FROM approvals WHERE status = 'pending'").fetchone()['c']
+
+    def decide(self, approval_id: int, status: str, decision_by: str, decided_at: str) -> None:
+        self._conn.execute(
+            'UPDATE approvals SET status = ?, decision_by = ?, decided_at = ? WHERE id = ?',
+            (status, decision_by, decided_at, approval_id),
+        )
+
+    def update_executed(self, approval_id: int, result: str, executed_at: str) -> None:
+        self._conn.execute(
+            "UPDATE approvals SET status = 'executed', result = ?, decided_at = ? WHERE id = ?",
+            (result, executed_at, approval_id),
+        )
 
 
 class SessionRepository:

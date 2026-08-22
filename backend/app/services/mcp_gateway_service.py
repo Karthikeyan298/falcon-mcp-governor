@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 from typing import Mapping
 
@@ -7,7 +8,8 @@ from app.formatting import decision_label
 from app.gateway_session import GatewaySessionStore
 from app.mcp_client import McpClient
 from app.policy_engine import InvalidPolicyError, PolicyEngine
-from app.repositories import AgentRepository, AuditRepository, ServerRepository, SettingsRepository, TrustRepository
+from app.repositories import AgentRepository, ApprovalRepository, AuditRepository, ServerRepository, SettingsRepository, TrustRepository
+from app.services.anomaly_service import AnomalyDetector
 from app.security import hash_api_key
 
 
@@ -147,8 +149,18 @@ class McpGatewayService:
             decision=label, user=session.user, reason=outcome.reason, created_at=now,
         )
 
-        if outcome.decision == 'deny':
-            return self._blocked_result(req_id, f'Blocked by policy: {outcome.reason}')
+        AnomalyDetector(self._database).check_with_conn(
+            conn, agent=session.agent, server=slug, tool=tool_name, decision=label, now=now,
+        )
+
+        if outcome.decision == 'require_approval':
+            ApprovalRepository(conn).create(
+                agent=session.agent, server=slug, tool=tool_name,
+                arguments=json.dumps(arguments), user=session.user, created_at=now,
+            )
+
+        if outcome.decision in ('deny', 'require_approval'):
+            return self._blocked_result(req_id, outcome.reason)
 
         result = McpClient(endpoint).call(
             session.upstream_session_id, 'tools/call', {'name': tool_name, 'arguments': arguments}, req_id=req_id,

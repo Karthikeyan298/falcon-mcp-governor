@@ -1,0 +1,66 @@
+@if (errorMessage) {
+  <div class="error-banner">{{ errorMessage }}</div>
+}
+<section class="content-grid">
+  <div class="panel span-3">
+    <div class="panel-header">
+      <h3>Approval requests</h3>
+      @if (state.pendingApprovalCount > 0) {
+        <span class="pending-badge">{{ state.pendingApprovalCount }} pending</span>
+      }
+    </div>
+    <p class="empty-state">
+      Tool calls marked <code>require_approval</code> in policy are held here until an administrator
+      approves or denies them. Approved requests are executed immediately by the gateway.
+    </p>
+
+    <div class="panel-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Requested</th>
+            <th>Agent</th>
+            <th>Tool</th>
+            <th>Arguments</th>
+            <th>User</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of state.approvals; track item.id) {
+            <tr>
+              <td>{{ item.id }}</td>
+              <td>{{ item.createdAt }}</td>
+              <td>{{ item.agent }}</td>
+              <td><code>{{ item.server }}.{{ item.tool }}</code></td>
+              <td class="args-cell">{{ argumentSummary(item.arguments) }}</td>
+              <td>{{ item.user }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  allowed: item.status === 'approved' || item.status === 'executed',
+                  blocked: item.status === 'denied',
+                  pending: item.status === 'pending'
+                }">{{ item.status }}</span>
+                @if (item.decisionBy) {
+                  <small class="decision-by">by {{ item.decisionBy }}</small>
+                }
+              </td>
+              <td>
+                @if (item.status === 'pending') {
+                  <div class="server-controls">
+                    <button class="primary-btn small" type="button" (click)="approve(item.id)">Approve</button>
+                    <button class="ghost-btn small danger" type="button" (click)="deny(item.id)">Deny</button>
+                  </div>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="8" class="empty-state">No approval requests yet.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

@@ -26,7 +26,7 @@ export interface Stat {
 export interface ToolPolicy {
   name: string;
   server: string;
-  status: 'Allowed' | 'Denied';
+  status: 'Allowed' | 'Denied' | 'Require approval';
   signed: boolean;
   risk: 'Low' | 'Medium' | 'High';
   environment: 'Production' | 'Staging' | 'Dev';
@@ -98,6 +98,57 @@ export interface Dashboard {
   policyYaml: string;
 }
 
+export interface Alert {
+  id: number;
+  type: 'repeated_denials' | 'high_call_rate' | 'new_tool_attempt' | 'approval_flood';
+  severity: 'low' | 'medium' | 'high';
+  agent: string;
+  server: string | null;
+  tool: string | null;
+  message: string;
+  createdAt: string;
+  acknowledgedAt: string | null;
+  acknowledgedBy: string | null;
+}
+
+export interface AlertRule {
+  enabled: boolean;
+  threshold?: number;
+  window_minutes?: number;
+  severity: 'low' | 'medium' | 'high';
+}
+
+export interface AlertRules {
+  repeated_denials: AlertRule;
+  high_call_rate: AlertRule;
+  new_tool_attempt: AlertRule;
+  approval_flood: AlertRule;
+}
+
+export interface Approval {
+  id: number;
+  agent: string;
+  server: string;
+  tool: string;
+  arguments: Record<string, unknown>;
+  user: string;
+  status: 'pending' | 'approved' | 'denied' | 'executed';
+  decisionBy: string | null;
+  decidedAt: string | null;
+  createdAt: string;
+  result: string | null;
+}
+
+export interface ToolMatrixRow {
+  name: string;
+  server: string;
+  serverSlug: string;
+  status: 'Allowed' | 'Denied' | 'Require approval';
+  signed: boolean;
+  risk: string;
+  environment: string;
+}
+
 export interface GatewayInvokeResult {
   decision: 'allow' | 'deny';
   decisionLabel: string;
@@ -107,7 +158,7 @@ export interface GatewayInvokeResult {
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
   getDashboard(): Observable<Dashboard> {
     return this.http.get<Dashboard>(`${API_BASE}/api/dashboard`);
@@ -174,6 +225,12 @@ export class ApiService {
     });
   }
 
+  getToolMatrix(agent?: string): Observable<ToolMatrixRow[]> {
+    const params: Record<string, string> = {};
+    if (agent) params['agent'] = agent;
+    return this.http.get<ToolMatrixRow[]>(`${API_BASE}/api/policies/tool-matrix`, { params });
+  }
+
   previewPolicyRule(payload: {
     yaml: string;
     agent: string | null;
@@ -219,5 +276,55 @@ export class ApiService {
 
   createUser(payload: { username: string; role: string }): Observable<UserCreated> {
     return this.http.post<UserCreated>(`${API_BASE}/api/users`, payload);
+  }
+
+  previewPolicyParamRule(payload: {
+    yaml: string;
+    agent: string | null;
+    server: string;
+    tool: string;
+    param: string;
+    operator: string;
+    value: string;
+    decision: string;
+    reason: string;
+  }): Observable<{ yaml: string }> {
+    return this.http.post<{ yaml: string }>(`${API_BASE}/api/policies/param-rule-preview`, payload);
+  }
+
+  getAlerts(): Observable<Alert[]> {
+    return this.http.get<Alert[]>(`${API_BASE}/api/alerts`);
+  }
+
+  getUnacknowledgedAlertCount(): Observable<{ count: number }> {
+    return this.http.get<{ count: number }>(`${API_BASE}/api/alerts/unacknowledged-count`);
+  }
+
+  acknowledgeAlert(id: number): Observable<Alert> {
+    return this.http.post<Alert>(`${API_BASE}/api/alerts/${id}/acknowledge`, {});
+  }
+
+  getAlertRules(): Observable<AlertRules> {
+    return this.http.get<AlertRules>(`${API_BASE}/api/alert-rules`);
+  }
+
+  updateAlertRules(rules: AlertRules): Observable<AlertRules> {
+    return this.http.put<AlertRules>(`${API_BASE}/api/alert-rules`, rules);
+  }
+
+  getApprovals(): Observable<Approval[]> {
+    return this.http.get<Approval[]>(`${API_BASE}/api/approvals`);
+  }
+
+  getPendingApprovalCount(): Observable<{ count: number }> {
+    return this.http.get<{ count: number }>(`${API_BASE}/api/approvals/pending-count`);
+  }
+
+  approveRequest(id: number): Observable<Approval> {
+    return this.http.post<Approval>(`${API_BASE}/api/approvals/${id}/approve`, {});
+  }
+
+  denyRequest(id: number): Observable<Approval> {
+    return this.http.post<Approval>(`${API_BASE}/api/approvals/${id}/deny`, {});
   }
 }

@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import {
   Agent,
   ApiService,
+  Approval,
   AuditItem,
   CurrentUser,
   Dashboard,
@@ -28,6 +29,9 @@ export class AppStateService {
   servers: McpServer[] = [];
   tools: Tool[] = [];
   users: CurrentUser[] = [];
+  approvals: Approval[] = [];
+  unacknowledgedAlertCount = 0;
+  pendingApprovalCount = 0;
 
   constructor(private readonly api: ApiService) {}
 
@@ -48,6 +52,19 @@ export class AppStateService {
     if (user.role === 'admin') {
       this.loadUsers();
     }
+    this.refreshAlertCount();
+    this.refreshApprovals();
+    setInterval(() => this.refreshAlertCount(), 30_000);
+    setInterval(() => this.refreshApprovals(), 8_000);
+  }
+
+  refreshAlertCount(): void {
+    this.api.getUnacknowledgedAlertCount().subscribe((r) => (this.unacknowledgedAlertCount = r.count));
+  }
+
+  refreshApprovals(): void {
+    this.api.getApprovals().subscribe((items) => (this.approvals = items));
+    this.api.getPendingApprovalCount().subscribe((r) => (this.pendingApprovalCount = r.count));
   }
 
   refreshAll(): void {

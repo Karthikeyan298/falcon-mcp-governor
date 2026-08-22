@@ -7,6 +7,7 @@ isolated `Database(tmp_path / "test.db")` and inject it via FastAPI's
 `dependency_overrides`, instead of monkeypatching a module-level path.
 """
 
+import json
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -16,6 +17,13 @@ from typing import Iterator
 from app.security import generate_temp_password, hash_api_key, hash_password
 
 DEFAULT_DB_PATH = Path(__file__).resolve().parent.parent / 'data' / 'control_plane.db'
+
+_DEFAULT_ALERT_RULES = {
+    'repeated_denials': {'enabled': True, 'threshold': 5, 'window_minutes': 10, 'severity': 'high'},
+    'high_call_rate':   {'enabled': True, 'threshold': 30, 'window_minutes': 1, 'severity': 'medium'},
+    'new_tool_attempt': {'enabled': True, 'severity': 'low'},
+    'approval_flood':   {'enabled': True, 'threshold': 5, 'window_minutes': 10, 'severity': 'medium'},
+}
 
 DEFAULT_POLICY_YAML = '''agent:
   name: production-support
@@ -119,6 +127,33 @@ CREATE TABLE IF NOT EXISTS sessions (
     created_at TEXT NOT NULL,
     expires_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS alerts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL,
+    severity TEXT NOT NULL,
+    agent TEXT NOT NULL,
+    server TEXT,
+    tool TEXT,
+    message TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    acknowledged_at TEXT,
+    acknowledged_by TEXT
+);
+
+CREATE TABLE IF NOT EXISTS approvals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    agent TEXT NOT NULL,
+    server TEXT NOT NULL,
+    tool TEXT NOT NULL,
+    arguments TEXT,
+    user TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    decision_by TEXT,
+    decided_at TEXT,
+    created_at TEXT NOT NULL,
+    result TEXT
+);
 '''
 
 
@@ -192,9 +227,9 @@ class Database:
         if 'input_schema' not in tool_columns:
             conn.execute('ALTER TABLE tools ADD COLUMN input_schema TEXT')
 
-        # Human-approval flow removed -- every decision is now allow/deny, so
-        # the approvals table (and any pending rows in it) is dropped outright.
-        conn.execute('DROP TABLE IF EXISTS approvals')
+        # Seed default alert rules on first run or upgrade from older schema.
+        if conn.execute("SELECT COUNT(*) FROM settings WHERE key = 'alert_rules'").fetchone()[0] == 0:
+            conn.execute("INSERT INTO settings (key, value) VALUES ('alert_rules', ?)", (json.dumps(_DEFAULT_ALERT_RULES),))
 
         # Backfill agents left over from before api_key_hash existed with the same
         # deterministic demo key pattern _seed() uses, so they keep working locally.

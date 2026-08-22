@@ -1,5 +1,5 @@
 from app.database import Database
-from app.formatting import clock_time, decision_label, relative_time
+from app.formatting import clock_time, policy_status_label, relative_time
 from app.policy_engine import PolicyEngine
 from app.repositories import AuditRepository, ServerRepository, SettingsRepository, ToolRepository, TrustRepository
 
@@ -30,7 +30,7 @@ class DashboardService:
                 tool_policies.append({
                     'name': t['name'],
                     'server': servers_repo.display_name(t['server']),
-                    'status': decision_label(decision.decision),
+                    'status': policy_status_label(decision.decision),
                     'signed': trust_status == 'Verified',
                     'risk': t['risk'],
                     'environment': t['environment'],

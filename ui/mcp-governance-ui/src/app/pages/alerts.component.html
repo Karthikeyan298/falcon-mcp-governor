@@ -1,0 +1,104 @@
+@if (errorMessage) {
+  <div class="error-banner">{{ errorMessage }}</div>
+}
+@if (successMessage) {
+  <div class="success-banner">{{ successMessage }}</div>
+}
+
+<section class="content-grid">
+
+  <!-- Active alerts -->
+  <div class="panel span-2">
+    <div class="panel-header">
+      <h3>Active alerts</h3>
+      @if (unacknowledgedCount() > 0) {
+        <span class="pending-badge">{{ unacknowledgedCount() }} unacknowledged</span>
+      }
+    </div>
+
+    @if (alerts.length === 0) {
+      <p class="empty-state">No alerts yet. Alerts fire when anomalous agent activity is detected.</p>
+    } @else {
+      <div class="list-stack">
+        @for (alert of alerts; track alert.id) {
+          <div class="trust-row" [class.alert-acknowledged]="!!alert.acknowledgedAt">
+            <div>
+              <strong>
+                <span class="tiny-badge" [ngClass]="severityClass(alert.severity)">{{ alert.severity }}</span>
+                {{ typeLabel(alert.type) }}
+              </strong>
+              <small>{{ alert.message }}</small>
+              <small>Agent: <strong>{{ alert.agent }}</strong>
+                @if (alert.server) { · {{ alert.server }}{{ alert.tool ? '.' + alert.tool : '' }} }
+                · {{ alert.createdAt }}
+              </small>
+              @if (alert.acknowledgedAt) {
+                <small class="ack-note">Acknowledged by {{ alert.acknowledgedBy }} · {{ alert.acknowledgedAt }}</small>
+              }
+            </div>
+            @if (!alert.acknowledgedAt) {
+              <button class="ghost-btn small" type="button" (click)="acknowledge(alert.id)">Acknowledge</button>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Detection rules -->
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Detection rules</h3>
+      <button class="ghost-btn small" type="button" (click)="showRules = !showRules">
+        {{ showRules ? 'Hide' : 'Configure' }}
+      </button>
+    </div>
+
+    @if (!showRules) {
+      <p class="empty-state">Click Configure to view and edit detection thresholds.</p>
+    } @else if (rules) {
+      <form class="invoke-form" (ngSubmit)="saveRules()">
+        @for (meta of rulesMeta; track meta.key) {
+          <div class="rule-section-label span-all"><strong>{{ meta.label }}</strong></div>
+
+          <label>
+            Enabled
+            <select [(ngModel)]="rules[meta.key].enabled" [name]="meta.key + '_enabled'">
+              <option [ngValue]="true">Yes</option>
+              <option [ngValue]="false">No</option>
+            </select>
+          </label>
+
+          <label>
+            Severity
+            <select [(ngModel)]="rules[meta.key].severity" [name]="meta.key + '_severity'">
+              @for (s of severityOptions; track s) {
+                <option [value]="s">{{ s }}</option>
+              }
+            </select>
+          </label>
+
+          @if (meta.hasWindow) {
+            <label>
+              Threshold (calls)
+              <input type="number" min="1" [(ngModel)]="rules[meta.key].threshold" [name]="meta.key + '_threshold'" />
+            </label>
+            <label>
+              Window (minutes)
+              <input type="number" min="1" [(ngModel)]="rules[meta.key].window_minutes" [name]="meta.key + '_window'" />
+            </label>
+          }
+
+          <div class="rule-divider span-all"></div>
+        }
+
+        <div class="status-cluster span-all">
+          <button class="primary-btn" type="submit" [disabled]="savingRules">
+            {{ savingRules ? 'Saving…' : 'Save rules' }}
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+
+</section>
