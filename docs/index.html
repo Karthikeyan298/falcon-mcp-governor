@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Falcon — MCP Governance Gateway Documentation</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0b1120;
+    --bg-panel:  #0f1a2e;
+    --bg-code:   #0a1120;
+    --border:    #1b2b43;
+    --text:      #cdd9ee;
+    --text-dim:  #7a96b8;
+    --text-head: #eaf2ff;
+    --accent:    #3b82f6;
+    --accent-lo: rgba(59,130,246,.12);
+    --green:     #10b981;
+    --green-lo:  rgba(16,185,129,.12);
+    --yellow:    #f59e0b;
+    --yellow-lo: rgba(245,158,11,.12);
+    --red:       #ef4444;
+    --red-lo:    rgba(239,68,68,.12);
+    --sidebar-w: 260px;
+    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.7;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── Sidebar ── */
+  nav {
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 0 0 24px;
+    scrollbar-width: thin;
+    scrollbar-color: #2b4066 transparent;
+  }
+
+  .nav-brand {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+
+  .nav-brand h1 {
+    font-size: 1.15rem;
+    color: var(--text-head);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .nav-brand span {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .nav-section {
+    padding: 6px 12px 2px 20px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 10px;
+  }
+
+  nav a {
+    display: block;
+    padding: 6px 20px;
+    font-size: 13.5px;
+    color: var(--text-dim);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+
+  nav a:hover { color: var(--text-head); background: rgba(59,130,246,.06); }
+  nav a.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-lo); }
+
+  /* ── Main ── */
+  main {
+    flex: 1;
+    min-width: 0;
+    max-width: 860px;
+    padding: 48px 56px 80px;
+  }
+
+  section { margin-bottom: 72px; }
+
+  h2 {
+    font-size: 1.7rem;
+    color: var(--text-head);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+    margin-bottom: 24px;
+    margin-top: 8px;
+  }
+
+  h3 {
+    font-size: 1.15rem;
+    color: var(--text-head);
+    font-weight: 600;
+    margin: 28px 0 12px;
+  }
+
+  h4 {
+    font-size: 0.95rem;
+    color: var(--text-head);
+    font-weight: 600;
+    margin: 20px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  p { margin-bottom: 14px; }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  ul, ol { padding-left: 22px; margin-bottom: 14px; }
+  li { margin-bottom: 5px; }
+
+  strong { color: var(--text-head); font-weight: 600; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    color: #93c5fd;
+  }
+
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    margin: 14px 0 20px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+    color: #b8d4f8;
+    scrollbar-width: thin;
+  }
+
+  pre code { background: none; border: none; padding: 0; font-size: inherit; color: inherit; }
+
+  /* comment */
+  .cm { color: #4a6278; }
+  /* keyword / action */
+  .kw { color: #7dd3fc; }
+  /* string */
+  .st { color: #86efac; }
+  /* number / bool */
+  .nm { color: #fca5a5; }
+  /* key */
+  .ky { color: #c4b5fd; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 20px;
+    font-size: 13.5px;
+  }
+
+  th, td {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    background: rgba(59,130,246,.08);
+    color: var(--text-head);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  tr:nth-child(even) td { background: rgba(255,255,255,.018); }
+
+  .callout {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 13.5px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  .callout.info  { background: var(--accent-lo); border: 1px solid rgba(59,130,246,.3); }
+  .callout.warn  { background: var(--yellow-lo); border: 1px solid rgba(245,158,11,.3); }
+  .callout.tip   { background: var(--green-lo);  border: 1px solid rgba(16,185,129,.3); }
+  .callout.danger{ background: var(--red-lo);    border: 1px solid rgba(239,68,68,.3); }
+
+  .callout.info  .callout-icon { color: #60a5fa; }
+  .callout.warn  .callout-icon { color: var(--yellow); }
+  .callout.tip   .callout-icon { color: var(--green); }
+  .callout.danger .callout-icon{ color: var(--red); }
+
+  .badge {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+
+  .badge-green  { background: var(--green-lo);  color: #6ee7b7; }
+  .badge-red    { background: var(--red-lo);    color: #fca5a5; }
+  .badge-yellow { background: var(--yellow-lo); color: #fcd34d; }
+  .badge-blue   { background: var(--accent-lo); color: #93c5fd; }
+
+  .step {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 18px;
+    align-items: flex-start;
+  }
+
+  .step-num {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-body { flex: 1; }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin: 16px 0 24px;
+  }
+
+  .feature-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .feature-card h4 { margin: 0 0 6px; text-transform: none; letter-spacing: 0; font-size: 0.95rem; }
+  .feature-card p  { font-size: 13px; color: var(--text-dim); margin: 0; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+  @media (max-width: 800px) {
+    nav { display: none; }
+    main { padding: 32px 20px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar navigation ── -->
+<nav id="sidebar">
+  <div class="nav-brand">
+    <h1>🦅 Falcon</h1>
+    <span>MCP Governance Gateway</span>
+  </div>
+
+  <div class="nav-section">Getting Started</div>
+  <a href="#introduction">Introduction</a>
+  <a href="#architecture">Architecture</a>
+  <a href="#quickstart">Quick Start</a>
+
+  <div class="nav-section">Administration</div>
+  <a href="#auth">Authentication &amp; Users</a>
+  <a href="#agents">Agents</a>
+  <a href="#servers">MCP Servers</a>
+
+  <div class="nav-section">Policy</div>
+  <a href="#policy-engine">Policy Engine</a>
+  <a href="#rule-builder">Rule Builder</a>
+  <a href="#param-rules">Parameter Rules</a>
+  <a href="#policy-matrix">Tool Policy Matrix</a>
+
+  <div class="nav-section">Workflow</div>
+  <a href="#gateway">Gateway Proxy</a>
+  <a href="#approvals">Approvals</a>
+  <a href="#alerts">Alerts &amp; Anomaly Detection</a>
+  <a href="#audit">Audit Trail</a>
+
+  <div class="nav-section">Reference</div>
+  <a href="#api">API Reference</a>
+  <a href="#troubleshooting">Troubleshooting</a>
+</nav>
+
+<!-- ── Main content ── -->
+<main>
+
+<!-- ───────────────────────────── Introduction ── -->
+<section id="introduction">
+  <h2>Introduction</h2>
+
+  <p>
+    <strong>Falcon</strong> is an open-source MCP (Model Context Protocol) governance gateway.
+    Instead of letting AI agents connect directly to your MCP servers — Jira, email, databases,
+    Kubernetes, and anything else — they connect to Falcon first. Every tool call passes through
+    a policy engine, a trust registry, and an audit trail before (or instead of) reaching the
+    real upstream server.
+  </p>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h4>🛡️ Policy Enforcement</h4>
+      <p>YAML rules decide allow, deny, or require approval for every agent × server × tool combination.</p>
+    </div>
+    <div class="feature-card">
+      <h4>✅ Human Approvals</h4>
+      <p>Flag sensitive tools for mandatory admin review before they execute.</p>
+    </div>
+    <div class="feature-card">
+      <h4>🔔 Anomaly Detection</h4>
+      <p>Automatic alerts for denial spikes, call rate floods, new tool attempts, and approval floods.</p>
+    </div>
+    <div class="feature-card">
+      <h4>📋 Audit Trail</h4>
+      <p>Append-only log of every decision: who, what, when, and why.</p>
+    </div>
+    <div class="feature-card">
+      <h4>🔑 Trust Registry</h4>
+      <p>Per-tool signature verification — revoked tools are blocked before policy is even consulted.</p>
+    </div>
+    <div class="feature-card">
+      <h4>🔍 Parameter Rules</h4>
+      <p>Inspect tool call arguments — block emails to external domains, protect production namespaces, etc.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────────── Architecture ── -->
+<section id="architecture">
+  <h2>Architecture</h2>
+
+  <p>
+    Falcon sits between your AI agents and your MCP servers. Agents authenticate with an
+    API key and speak the MCP streamable-HTTP protocol. Falcon intercepts, evaluates policy,
+    then either proxies to the real server or returns a block/pending response.
+  </p>
+
+<pre><code>
+  ┌─────────────────┐        X-Agent-Key        ┌───────────────────────────┐
+  │   AI Agent      │ ──── POST /mcp/{slug} ──▶ │   Falcon Gateway          │
+  │ (LangChain, LG, │                            │                           │
+  │  CrewAI, etc.)  │ ◀──── tool result ──────── │  ┌─────────────────────┐ │
+  └─────────────────┘                            │  │  Policy Engine       │ │
+                                                 │  │  Trust Registry      │ │
+  ┌─────────────────┐                            │  │  Anomaly Detector    │ │
+  │  Falcon UI      │ ── session cookie ───────▶ │  │  Audit Logger        │ │
+  │  (Angular)      │                            │  └─────────────────────┘ │
+  │  :4200          │ ◀── JSON API ────────────── │                           │
+  └─────────────────┘                            │  ┌─────────────────────┐ │
+                                                 │  │  SQLite Database    │ │
+                                                 │  └─────────────────────┘ │
+                                                 └───────────┬───────────────┘
+                                                             │ (on allow)
+                                                    ┌────────▼────────┐
+                                                    │  Real MCP Server │
+                                                    │  (email, Jira,   │
+                                                    │   database, ...)  │
+                                                    └──────────────────┘
+</code></pre>
+
+  <h3>Components</h3>
+  <table>
+    <tr><th>Component</th><th>Technology</th><th>Default Port</th></tr>
+    <tr><td><strong>Backend</strong> — API + Gateway</td><td>Python / FastAPI / SQLite</td><td>8000</td></tr>
+    <tr><td><strong>Frontend</strong> — Admin UI</td><td>Angular 19 / nginx</td><td>4200</td></tr>
+    <tr><td><strong>Database</strong></td><td>SQLite (file: <code>data/control_plane.db</code>)</td><td>—</td></tr>
+  </table>
+</section>
+
+<!-- ───────────────────────────── Quick Start ── -->
+<section id="quickstart">
+  <h2>Quick Start</h2>
+
+  <h3>Option A — Docker Compose (recommended)</h3>
+
+<pre><code><span class="cm"># Clone the repo</span>
+git clone https://github.com/your-org/falcon-mcp-governor.git
+cd falcon-mcp-governor
+
+<span class="cm"># Build and start</span>
+docker compose up -d --build
+
+<span class="cm"># Get the one-time admin password (first boot only)</span>
+docker compose logs backend | grep -A3 "created default admin"
+</code></pre>
+
+  <p>Open <strong>http://localhost:4200</strong> and log in with <code>admin</code> + the password from the log.</p>
+
+  <div class="callout warn">
+    <span class="callout-icon">⚠️</span>
+    <div>The one-time bootstrap password is printed <em>once</em> at first startup. Copy it immediately. If you lose it, delete the database (<code>docker compose down -v</code>) to regenerate.</div>
+  </div>
+
+  <h3>Option B — Local development</h3>
+
+<pre><code><span class="cm"># Backend</span>
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+
+<span class="cm"># Frontend (separate terminal)</span>
+cd ui/mcp-governance-ui
+npm install
+npm start    <span class="cm"># → http://localhost:4200</span>
+</code></pre>
+
+  <h3>Environment variables</h3>
+  <table>
+    <tr><th>Variable</th><th>Default</th><th>Purpose</th></tr>
+    <tr><td><code>FALCON_UI_ORIGINS</code></td><td><code>http://localhost:4200</code></td><td>Comma-separated list of allowed CORS origins for the UI</td></tr>
+  </table>
+
+  <div class="callout info">
+    <span class="callout-icon">ℹ️</span>
+    <div>If you serve the UI from a different host/port, set <code>FALCON_UI_ORIGINS</code> to match exactly — otherwise credentialed cookie requests will be silently rejected by CORS.</div>
+  </div>
+
+  <h3>First steps after login</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Register an MCP server</strong> — Servers tab → Add server. Provide the HTTP endpoint of your upstream MCP server.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Sync tools</strong> — Click Sync on the server to discover its tools and populate the trust registry.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Register an agent</strong> — Agents tab → Register agent. Copy the one-time API key.</div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Write a policy</strong> — Policies tab → Rule builder or edit the YAML directly, then Deploy.</div></div>
+  <div class="step"><div class="step-num">5</div><div class="step-body"><strong>Point your agent</strong> at <code>POST http://localhost:8000/mcp/{server-slug}</code> with <code>X-Agent-Key: &lt;key&gt;</code>.</div></div>
+</section>
+
+<!-- ───────────────────────────── Auth & Users ── -->
+<section id="auth">
+  <h2>Authentication &amp; Users</h2>
+
+  <h3>Session-based login (UI / REST API)</h3>
+  <p>
+    Every <code>/api/*</code> route — except <code>/api/auth/*</code> — requires a valid
+    session cookie (<code>falcon_session</code>). Sessions are HttpOnly, valid for 24 hours,
+    and stored server-side in the <code>sessions</code> table.
+  </p>
+
+<pre><code><span class="cm"># Login</span>
+curl -c cookies.txt -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"your-password"}'
+
+<span class="cm"># Use session cookie for subsequent requests</span>
+curl -b cookies.txt http://localhost:8000/api/agents
+</code></pre>
+
+  <h3>Changing your password</h3>
+  <p>
+    Any logged-in user can change their own password via <strong>Account → Change password</strong>
+    in the UI, or:
+  </p>
+<pre><code>POST /api/auth/password
+{"current_password": "old", "new_password": "newpass123"}
+</code></pre>
+  <p>Changing the password invalidates all other active sessions for that user.</p>
+
+  <h3>User management (admin only)</h3>
+  <p>
+    Admins can create additional users from the <strong>Users tab</strong>. The response includes
+    a one-time <code>temp_password</code> — copy it immediately. Users should change it on first
+    login.
+  </p>
+
+  <table>
+    <tr><th>Role</th><th>Permissions</th></tr>
+    <tr><td><strong>admin</strong></td><td>Full access including user management, approvals, and all admin actions</td></tr>
+    <tr><td><strong>user</strong></td><td>Access to all non-admin endpoints (audit, gateway, agents, servers, policies)</td></tr>
+  </table>
+
+  <div class="callout tip">
+    <span class="callout-icon">✅</span>
+    <div>Create a personal admin account and deactivate the bootstrap <code>admin</code> account for better auditability. Every action is logged under the authenticated username.</div>
+  </div>
+</section>
+
+<!-- ───────────────────────────── Agents ── -->
+<section id="agents">
+  <h2>Agents</h2>
+
+  <p>
+    An <strong>agent</strong> in Falcon is an identity representing an AI agent (a LangChain app,
+    a LangGraph pipeline, a CrewAI crew, etc.). Agents authenticate to the gateway using an API
+    key, and policy is evaluated based on the resolved agent name — not anything the client
+    self-reports.
+  </p>
+
+  <h3>Registering an agent</h3>
+  <p>Go to <strong>Agents tab → Register agent</strong>, or:</p>
+
+<pre><code>POST /api/agents
+{
+  "name": "story-creator",
+  "owner": "alice",
+  "environment": "Production",
+  "status": "Active"
+}
+</code></pre>
+
+  <p>The response includes a one-time <code>api_key</code>:</p>
+
+<pre><code>{
+  "name": "story-creator",
+  "owner": "alice",
+  "environment": "Production",
+  "tools_allowed": 5,
+  "status": "Active",
+  "api_key": "mcp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+}
+</code></pre>
+
+  <div class="callout danger">
+    <span class="callout-icon">🚨</span>
+    <div><strong>Copy the API key immediately.</strong> Falcon only stores its hash — the raw key is never retrievable again. If you lose it, delete the agent and register a new one.</div>
+  </div>
+
+  <h3>Tools allowed</h3>
+  <p>
+    The <strong>Tools allowed</strong> count shown on the Agents page is computed dynamically
+    from the current deployed policy — it reflects exactly how many (server, tool) combinations
+    are not denied for that agent under the live policy. It updates automatically when you
+    deploy a new policy.
+  </p>
+
+  <h3>Suspending an agent</h3>
+  <p>
+    Toggle an agent's status from <strong>Active</strong> to <strong>Suspended</strong> via the
+    Agents tab or <code>POST /api/agents/{name}/toggle</code>. A suspended agent is immediately
+    blocked at authentication — even with a valid API key, gateway requests return <code>401 Unauthorized</code>.
+  </p>
+
+  <h3>Deleting an agent</h3>
+  <p>
+    Delete via the Agents tab or <code>DELETE /api/agents/{name}</code>. The agent's API key
+    becomes permanently invalid. Audit records referencing the agent are retained.
+  </p>
+</section>
+
+<!-- ───────────────────────────── MCP Servers ── -->
+<section id="servers">
+  <h2>MCP Servers</h2>
+
+  <p>
+    An MCP server is an upstream tool provider — an email server, database, Jira, Kubernetes
+    API, or any service that speaks the MCP streamable-HTTP protocol. You register it with
+    Falcon so that agents can connect through the gateway instead of directly.
+  </p>
+
+  <h3>Registering a server</h3>
+  <p><strong>Servers tab → Add server</strong>, or:</p>
+
+<pre><code>POST /api/servers
+{
+  "slug": "email-server",
+  "name": "Email MCP",
+  "endpoint": "http://localhost:8002/mcp",
+  "trust": "Trusted"
+}
+</code></pre>
+
+  <table>
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td><code>slug</code></td><td>URL-safe identifier used in gateway routes (<code>/mcp/{slug}</code>) and policy YAML</td></tr>
+    <tr><td><code>name</code></td><td>Human-readable display name</td></tr>
+    <tr><td><code>endpoint</code></td><td>Full HTTP/HTTPS URL of the upstream MCP server's streamable-HTTP endpoint</td></tr>
+    <tr><td><code>trust</code></td><td><code>Trusted</code> or <code>Needs review</code> — applied to all tools discovered from this server</td></tr>
+  </table>
+
+  <h3>Syncing tools</h3>
+  <p>
+    Click <strong>Sync</strong> on a server (or <code>POST /api/servers/{slug}/sync</code>)
+    to discover its live tool list. Sync:
+  </p>
+  <ul>
+    <li>Replaces Falcon's local tool list with what the server actually reports</li>
+    <li>Upserts a trust record per tool (<code>Verified</code> for Trusted servers, <code>Needs approval</code> otherwise)</li>
+    <li>Fills in a conservative default policy action for newly-discovered tools not already covered:
+      Low risk → <code>allow</code>, Medium/High risk → <code>deny</code></li>
+    <li>Preserves rules you have already set — no existing policy is overwritten</li>
+  </ul>
+
+  <div class="callout info">
+    <span class="callout-icon">ℹ️</span>
+    <div>Re-sync whenever the upstream server adds or removes tools. New tools won't appear in Falcon's policy evaluation or audit trail until a sync has run.</div>
+  </div>
+
+  <h3>Trust levels</h3>
+  <table>
+    <tr><th>Status</th><th>Effect</th></tr>
+    <tr><td><span class="badge badge-green">Verified</span></td><td>Tool is trusted; policy evaluation proceeds normally</td></tr>
+    <tr><td><span class="badge badge-yellow">Needs approval</span></td><td>Tool is blocked regardless of policy action — must be manually promoted</td></tr>
+    <tr><td><span class="badge badge-red">Revoked</span></td><td>Tool is permanently blocked; cannot be called even if policy says allow</td></tr>
+  </table>
+
+  <p>
+    Trust status is checked <em>before</em> policy. A tool with <code>action: allow</code>
+    in policy is still denied if its trust status is <code>Revoked</code> or <code>Needs approval</code>.
+  </p>
+</section>
+
+<!-- ───────────────────────────── Policy Engine ── -->
+<section id="policy-engine">
+  <h2>Policy Engine</h2>
+
+  <p>
+    Policy is a single YAML document — the source of truth for what every agent is
+    allowed to do. It is evaluated at call time against the live deployed version; a
+    policy deploy takes effect immediately for all subsequent calls.
+  </p>
+
+  <h3>Policy structure</h3>
+
+<pre><code><span class="ky">servers</span>:                        <span class="cm"># default rules — apply to every agent</span>
+  <span class="ky">email-server</span>:
+    <span class="ky">tools</span>:
+      <span class="ky">send_email</span>:
+        <span class="kw">action</span>: <span class="st">allow</span>
+        <span class="ky">param_rules</span>:             <span class="cm"># optional per-argument checks</span>
+          - <span class="ky">param</span>: <span class="st">recipient</span>
+            <span class="ky">not_endswith</span>: <span class="st">"@company.com"</span>
+            <span class="ky">decision</span>: <span class="st">deny</span>
+            <span class="ky">reason</span>: <span class="st">External recipient blocked</span>
+      <span class="ky">delete_email</span>:
+        <span class="kw">action</span>: <span class="st">deny</span>
+      <span class="ky">"*"</span>:                         <span class="cm"># wildcard — fallback for unlisted tools</span>
+        <span class="kw">action</span>: <span class="st">deny</span>
+
+  <span class="ky">database</span>:
+    <span class="ky">tools</span>:
+      <span class="ky">read_record</span>:
+        <span class="kw">action</span>: <span class="st">allow</span>
+      <span class="ky">delete_record</span>:
+        <span class="kw">action</span>: <span class="st">require_approval</span>  <span class="cm"># held for human review</span>
+
+<span class="ky">agent_overrides</span>:                 <span class="cm"># optional, keyed by agent name</span>
+  <span class="ky">hr-agent</span>:
+    <span class="ky">servers</span>:
+      <span class="ky">email-server</span>:
+        <span class="ky">tools</span>:
+          <span class="ky">send_email</span>:
+            <span class="kw">action</span>: <span class="st">deny</span>          <span class="cm"># overrides the default for this agent only</span>
+</code></pre>
+
+  <h3>Policy actions</h3>
+  <table>
+    <tr><th>Action</th><th>Effect</th></tr>
+    <tr>
+      <td><code>allow</code></td>
+      <td>Tool call is proxied to the upstream MCP server and the result returned to the agent</td>
+    </tr>
+    <tr>
+      <td><code>deny</code></td>
+      <td>Tool call is blocked. Agent receives an MCP error response with the denial reason</td>
+    </tr>
+    <tr>
+      <td><code>require_approval</code></td>
+      <td>Tool call is blocked, a pending approval record is created, and an admin must approve or deny it before it executes</td>
+    </tr>
+  </table>
+
+  <h3>Evaluation order</h3>
+  <p>For a given call <code>(agent, server, tool)</code>, the engine checks in this order:</p>
+  <ol>
+    <li><strong>Trust registry</strong> — if the tool's status is <code>Revoked</code> or <code>Needs approval</code>, deny immediately</li>
+    <li><strong>Policy lookup</strong> — finds the most-specific matching rule:
+      <ol>
+        <li>Agent-specific exact tool match</li>
+        <li>Agent-specific wildcard (<code>"*"</code>)</li>
+        <li>Default exact tool match</li>
+        <li>Default wildcard (<code>"*"</code>)</li>
+        <li>Default deny (no match)</li>
+      </ol>
+    </li>
+    <li><strong>Parameter rules</strong> — if the matched config has <code>param_rules</code>, evaluate each against the call arguments. A firing deny rule wins over the base action.</li>
+  </ol>
+
+  <h3>Deploying a policy</h3>
+  <p>
+    Edit the YAML in the <strong>Policies tab</strong> (or stage changes with the rule builders)
+    then click <strong>Deploy</strong>. The policy is validated before saving — an invalid YAML
+    or missing <code>servers</code> key returns a 422 error. A deploy is logged in the audit
+    trail under agent <code>control-plane</code>.
+  </p>
+</section>
+
+<!-- ───────────────────────────── Rule Builder ── -->
+<section id="rule-builder">
+  <h2>Rule Builder</h2>
+
+  <p>
+    The rule builder provides a form-driven way to add or update policy rules without
+    editing YAML directly. It <em>stages</em> changes into the YAML editor — nothing
+    is saved until you click <strong>Deploy</strong>.
+  </p>
+
+  <h3>Adding an allow/deny/require_approval rule</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-body">Go to the <strong>Policies</strong> page.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body">In the <strong>Rule builder</strong> panel, select: <strong>Applies to</strong> (agent scope — blank = all agents), <strong>Server</strong>, <strong>Tool</strong> (or <code>*</code> for all), and <strong>Action</strong> (<code>allow</code>, <code>deny</code>, or <code>require approval</code>).</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body">Click <strong>Add rule to YAML</strong>. The YAML editor updates with the merged rule — review it.</div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-body">Click <strong>Deploy</strong> to persist and activate the policy.</div></div>
+
+  <div class="callout warn">
+    <span class="callout-icon">⚠️</span>
+    <div>"Add rule to YAML" only stages the change in the text editor. It does <strong>not</strong> take effect until you click Deploy.</div>
+  </div>
+</section>
+
+<!-- ───────────────────────────── Param Rules ── -->
+<section id="param-rules">
+  <h2>Parameter Rules</h2>
+
+  <p>
+    Parameter rules let you inspect tool call <em>arguments</em> and make decisions based
+    on their values — for example, blocking emails to external domains, or denying
+    operations in a production namespace.
+  </p>
+
+  <h3>Param rule builder</h3>
+  <p>The <strong>Param rule builder</strong> panel on the Policies page adds param rules without writing YAML manually:</p>
+  <div class="step"><div class="step-num">1</div><div class="step-body">Select the agent scope, server, and tool the rule applies to.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body">Enter the <strong>Parameter</strong> name (must match the tool's argument name exactly).</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body">Choose an <strong>Operator</strong> and enter a <strong>Value</strong>.</div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-body">Choose a <strong>Decision</strong> (<code>deny</code>, <code>allow</code>, or <code>require_approval</code>) and an optional reason.</div></div>
+  <div class="step"><div class="step-num">5</div><div class="step-body">Click <strong>Add param rule to YAML</strong>, review, then <strong>Deploy</strong>.</div></div>
+
+  <h3>Operators</h3>
+  <table>
+    <tr><th>Operator</th><th>Matches when…</th><th>Example</th></tr>
+    <tr><td><code>equals</code></td><td>Value exactly equals the target</td><td><code>namespace equals production</code></td></tr>
+    <tr><td><code>not_equals</code></td><td>Value does not equal the target</td><td><code>environment not_equals staging</code></td></tr>
+    <tr><td><code>endswith</code></td><td>Value ends with the target string</td><td><code>recipient endswith @company.com</code></td></tr>
+    <tr><td><code>not_endswith</code></td><td>Value does not end with the target</td><td><code>recipient not_endswith @company.com</code></td></tr>
+  </table>
+
+  <h3>YAML representation</h3>
+<pre><code><span class="ky">send_email</span>:
+  <span class="kw">action</span>: <span class="st">allow</span>
+  <span class="ky">param_rules</span>:
+    - <span class="ky">param</span>: <span class="st">recipient</span>
+      <span class="ky">not_endswith</span>: <span class="st">"@company.com"</span>
+      <span class="ky">decision</span>: <span class="st">deny</span>
+      <span class="ky">reason</span>: <span class="st">External recipient blocked</span>
+    - <span class="ky">param</span>: <span class="st">recipient</span>
+      <span class="ky">endswith</span>: <span class="st">"@vip-partner.com"</span>
+      <span class="ky">decision</span>: <span class="st">require_approval</span>
+      <span class="ky">reason</span>: <span class="st">VIP partner email requires admin sign-off</span>
+</code></pre>
+
+  <p>
+    Rules in <code>param_rules</code> are evaluated in order. A <strong>deny</strong> rule
+    wins over any other decision, including the base <code>action</code>. A missing or
+    non-string parameter value never triggers a rule (the rule is skipped).
+  </p>
+</section>
+
+<!-- ───────────────────────────── Policy Matrix ── -->
+<section id="policy-matrix">
+  <h2>Tool Policy Matrix</h2>
+
+  <p>
+    The <strong>Tool policy matrix</strong> panel on the Policies page gives a tabular view
+    of every tool and its policy status. Crucially, it evaluates the policy
+    <em>per-agent</em> — so selecting an agent shows exactly what that agent is and isn't
+    allowed to do.
+  </p>
+
+  <h3>Using the filters</h3>
+  <table>
+    <tr><th>Filter</th><th>Effect</th></tr>
+    <tr>
+      <td><strong>Agent</strong></td>
+      <td>Re-evaluates the entire policy for the selected agent, applying any agent-specific overrides. "All agents" shows the global default policy.</td>
+    </tr>
+    <tr>
+      <td><strong>Server</strong></td>
+      <td>Narrows the table to tools from that server only. Populated dynamically from the current result set.</td>
+    </tr>
+  </table>
+
+  <p>The <strong>count</strong> in the top-right of the panel updates as you filter.</p>
+
+  <h3>Status badges</h3>
+  <table>
+    <tr><th>Badge</th><th>Meaning</th></tr>
+    <tr><td><span class="badge badge-green">Allowed</span></td><td>Policy allows this tool for the selected agent</td></tr>
+    <tr><td><span class="badge badge-red">Denied</span></td><td>Policy (or trust registry) blocks this tool</td></tr>
+    <tr><td><span class="badge badge-yellow">Require approval</span></td><td>Tool is accessible but every call must be approved by an admin first</td></tr>
+  </table>
+</section>
+
+<!-- ───────────────────────────── Gateway Proxy ── -->
+<section id="gateway">
+  <h2>Gateway Proxy</h2>
+
+  <p>
+    The real MCP gateway lives at <code>/mcp/{server-slug}</code>. Agents connect here
+    instead of directly to the upstream MCP server. The gateway speaks the MCP
+    streamable-HTTP protocol.
+  </p>
+
+  <h3>Authentication</h3>
+  <p>All MCP requests must include the agent's API key:</p>
+<pre><code>X-Agent-Key: mcp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
+
+  <p>An optional header attributes calls to a specific human user in the audit log:</p>
+<pre><code>X-Agent-User: alice</code></pre>
+
+  <h3>Session flow</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Initialize</strong> — <code>POST /mcp/{slug}</code> with <code>method: "initialize"</code>. Falcon resolves the agent from <code>X-Agent-Key</code>, creates a session with the upstream server, and returns a <code>mcp-session-id</code> header.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body"><strong>List tools</strong> — <code>method: "tools/list"</code>. Tools that would be denied for this agent are <em>removed</em> from the response — the agent never sees them.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Call a tool</strong> — <code>method: "tools/call"</code>. Falcon evaluates policy. On allow, proxies the call and returns the real result. On deny or require_approval, returns an MCP error result with <code>isError: true</code>.</div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Close</strong> — <code>DELETE /mcp/{slug}</code> with the session ID header.</div></div>
+
+  <h3>Complete example</h3>
+<pre><code><span class="cm"># 1. Initialize</span>
+curl -X POST http://localhost:8000/mcp/email-server \
+  -H "X-Agent-Key: mcp_abc123" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"my-agent","version":"1.0"}}}'
+
+<span class="cm"># Response includes: mcp-session-id header</span>
+
+<span class="cm"># 2. Call a tool</span>
+curl -X POST http://localhost:8000/mcp/email-server \
+  -H "X-Agent-Key: mcp_abc123" \
+  -H "mcp-session-id: &lt;session-id-from-step-1&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"send_email","arguments":{"recipient":"alice@company.com","subject":"Hello","body":"Hi"}}}'
+</code></pre>
+
+  <h3>Gateway test page (no real agent needed)</h3>
+  <p>
+    The <strong>Gateway tab</strong> in the UI lets you simulate a tool call through the full
+    policy engine without needing a running agent or upstream server. Pick an agent, server,
+    and tool; fill in arguments; and submit. The result shows the policy decision and reason,
+    and the call is written to the audit trail — useful for testing policy changes before
+    deploying them.
+  </p>
+</section>
+
+<!-- ───────────────────────────── Approvals ── -->
+<section id="approvals">
+  <h2>Approvals Workflow</h2>
+
+  <p>
+    When a tool has <code>action: require_approval</code> in policy, every call to that
+    tool from an agent is <em>held</em> — the agent receives a blocked response, and the
+    call is queued for human review. An admin can then approve or deny it from the
+    <strong>Approvals</strong> page.
+  </p>
+
+  <h3>How it works end-to-end</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Agent calls a tool</strong> marked <code>require_approval</code>. The gateway logs a <code>Pending</code> audit entry, creates an approval record, and returns a blocked MCP error to the agent: <em>"This operation requires human approval before it can be executed."</em></div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Pending badge</strong> appears on the Approvals nav item, showing the count of unreviewed requests. The page auto-refreshes every 8 seconds.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body">An admin navigates to <strong>Approvals</strong> and reviews the request — agent identity, tool, arguments, and requestor are all shown.</div></div>
+  <div class="step"><div class="step-num">4a</div><div class="step-body"><strong>Approve</strong> — policy is <em>re-evaluated</em> against the live policy at approval time (a deny rule added after the request was made is still enforced). If still allowed, Falcon connects directly to the upstream MCP server and executes the tool, logging the result as <code>Allowed</code>. The agent does not need to retry.</div></div>
+  <div class="step"><div class="step-num">4b</div><div class="step-body"><strong>Deny</strong> — the approval record is marked denied, a <code>Denied</code> audit entry is written, and anomaly detection runs on the denial (contributing toward repeated-denial alerts).</div></div>
+
+  <h3>Approval statuses</h3>
+  <table>
+    <tr><th>Status</th><th>Meaning</th></tr>
+    <tr><td><span class="badge badge-yellow">pending</span></td><td>Awaiting admin decision</td></tr>
+    <tr><td><span class="badge badge-green">approved</span></td><td>Admin approved; execution in progress or complete</td></tr>
+    <tr><td><span class="badge badge-green">executed</span></td><td>Tool was successfully called on the upstream server after approval</td></tr>
+    <tr><td><span class="badge badge-red">denied</span></td><td>Admin explicitly rejected the request</td></tr>
+  </table>
+
+  <div class="callout info">
+    <span class="callout-icon">ℹ️</span>
+    <div>Approval does not bypass policy — the live policy is re-evaluated at execution time. If a new deny rule was added between the approval request and the admin's decision, the call is still blocked and logged as Denied.</div>
+  </div>
+
+  <h3>Setting a tool to require approval</h3>
+  <p>Via the rule builder: select server, tool, action = <strong>Require approval</strong>, then deploy. Or directly in YAML:</p>
+<pre><code><span class="ky">delete_record</span>:
+  <span class="kw">action</span>: <span class="st">require_approval</span></code></pre>
+</section>
+
+<!-- ───────────────────────────── Alerts ── -->
+<section id="alerts">
+  <h2>Alerts &amp; Anomaly Detection</h2>
+
+  <p>
+    Falcon continuously monitors the audit trail for suspicious patterns and automatically
+    creates alerts when anomalies are detected. Alerts appear on the <strong>Alerts</strong>
+    page, and an unacknowledged count badge appears in the nav.
+  </p>
+
+  <h3>Alert types</h3>
+  <table>
+    <tr><th>Type</th><th>Triggers when…</th><th>Default threshold</th></tr>
+    <tr>
+      <td><strong>repeated_denials</strong></td>
+      <td>An agent accumulates too many denied tool calls in a time window — possible policy misconfiguration or probing</td>
+      <td>5 denials in 10 minutes</td>
+    </tr>
+    <tr>
+      <td><strong>high_call_rate</strong></td>
+      <td>An agent makes an unusually large number of tool calls in a short window — possible runaway loop</td>
+      <td>30 calls in 1 minute</td>
+    </tr>
+    <tr>
+      <td><strong>new_tool_attempt</strong></td>
+      <td>An agent calls a tool it has never called before (first-ever appearance in audit for that agent × server × tool)</td>
+      <td>First occurrence (no threshold)</td>
+    </tr>
+    <tr>
+      <td><strong>approval_flood</strong></td>
+      <td>An agent generates an unusually large number of approval requests in a short window</td>
+      <td>5 pending decisions in 10 minutes</td>
+    </tr>
+  </table>
+
+  <h3>Alert deduplication</h3>
+  <p>
+    Falcon will not create a new alert of the same type for the same agent while an
+    unacknowledged alert of that type already exists (except <code>new_tool_attempt</code>,
+    which deduplicates on the agent + server + tool combination). This prevents alert storms
+    from a single ongoing issue.
+  </p>
+
+  <h3>Configuring alert rules</h3>
+  <p>
+    On the <strong>Alerts</strong> page, click <strong>Configure rules</strong> to adjust
+    thresholds, time windows, severity, and enable/disable individual alert types. Changes
+    take effect immediately for subsequent calls.
+  </p>
+
+  <table>
+    <tr><th>Setting</th><th>Description</th></tr>
+    <tr><td><strong>enabled</strong></td><td>Toggle an alert type on or off entirely</td></tr>
+    <tr><td><strong>threshold</strong></td><td>Number of events that must occur before the alert fires</td></tr>
+    <tr><td><strong>window_minutes</strong></td><td>Time window over which events are counted (rolling)</td></tr>
+    <tr><td><strong>severity</strong></td><td>Visual severity level: <code>low</code>, <code>medium</code>, or <code>high</code></td></tr>
+  </table>
+
+  <h3>Acknowledging alerts</h3>
+  <p>
+    Click <strong>Acknowledge</strong> on an alert to mark it reviewed. Acknowledged alerts
+    remain visible (dimmed) for audit purposes. Acknowledging an alert resets the deduplication
+    window — if the condition persists, a new alert can fire again.
+  </p>
+
+  <h3>When detection runs</h3>
+  <p>
+    Anomaly detection runs synchronously after every tool call decision — both through the
+    real MCP gateway (<code>/mcp/{slug}</code>) and through the UI Gateway test page
+    (<code>/api/gateway/invoke</code>). Admin denials of approval requests also run detection,
+    contributing toward the <code>repeated_denials</code> count.
+  </p>
+</section>
+
+<!-- ───────────────────────────── Audit Trail ── -->
+<section id="audit">
+  <h2>Audit Trail</h2>
+
+  <p>
+    The <strong>Audit tab</strong> shows an append-only log of every policy decision and
+    gateway action. Records are never modified or deleted — the trail is tamper-evident
+    by design.
+  </p>
+
+  <h3>What gets logged</h3>
+  <table>
+    <tr><th>Event</th><th>Decision label</th></tr>
+    <tr><td>Tool call allowed by policy</td><td><span class="badge badge-green">Allowed</span></td></tr>
+    <tr><td>Tool call denied by policy or trust registry</td><td><span class="badge badge-red">Denied</span></td></tr>
+    <tr><td>Tool call intercepted for human approval</td><td><span class="badge badge-yellow">Pending</span></td></tr>
+    <tr><td>Approved call executed on upstream server</td><td><span class="badge badge-green">Allowed</span></td></tr>
+    <tr><td>Admin denied an approval request</td><td><span class="badge badge-red">Denied</span></td></tr>
+    <tr><td>Policy deployed</td><td><span class="badge badge-blue">Allowed</span> (agent: <code>control-plane</code>)</td></tr>
+  </table>
+
+  <h3>Audit fields</h3>
+  <table>
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td><strong>Time</strong></td><td>UTC timestamp of the event</td></tr>
+    <tr><td><strong>Agent</strong></td><td>Resolved agent name (from API key, not self-reported)</td></tr>
+    <tr><td><strong>Tool</strong></td><td><code>server.tool</code> — e.g., <code>email-server.send_email</code></td></tr>
+    <tr><td><strong>Action</strong></td><td><code>invoke</code> for tool calls, <code>deploy</code> for policy changes</td></tr>
+    <tr><td><strong>Decision</strong></td><td>Allowed / Denied / Pending</td></tr>
+    <tr><td><strong>User</strong></td><td>Human user attributed to the call (<code>X-Agent-User</code> header, or agent name)</td></tr>
+    <tr><td><strong>Reason</strong></td><td>Explanation for the decision (which policy rule fired, trust status, etc.)</td></tr>
+  </table>
+
+  <p>Export the full audit log as JSON via the <strong>Export log</strong> button, or <code>GET /api/audit</code>.</p>
+</section>
+
+<!-- ───────────────────────────── API Reference ── -->
+<section id="api">
+  <h2>API Reference</h2>
+
+  <p>
+    The full interactive API is available at <code>http://localhost:8000/docs</code> (Swagger UI)
+    when the backend is running. The table below is a quick reference.
+  </p>
+
+  <h3>Authentication</h3>
+  <table>
+    <tr><th>Endpoint</th><th>Description</th></tr>
+    <tr><td><code>POST /api/auth/login</code></td><td>Log in with username/password; sets session cookie</td></tr>
+    <tr><td><code>POST /api/auth/logout</code></td><td>Invalidate the current session</td></tr>
+    <tr><td><code>GET /api/auth/me</code></td><td>Get the current logged-in user</td></tr>
+    <tr><td><code>POST /api/auth/password</code></td><td>Change your own password</td></tr>
+  </table>
+
+  <h3>Users (admin only)</h3>
+  <table>
+    <tr><th>Endpoint</th><th>Description</th></tr>
+    <tr><td><code>GET /api/users</code></td><td>List all users</td></tr>
+    <tr><td><code>POST /api/users</code></td><td>Create a user; response includes one-time <code>temp_password</code></td></tr>
+  </table>
+
+  <h3>Agents</h3>
+  <table>
+    <tr><th>Endpoint</th><th>Description</th></tr>
+    <tr><td><code>GET /api/agents</code></td><td>List all agents with live <code>tools_allowed</code> count</td></tr>
+    <tr><td><code>POST /api/agents</code></td><td>Register an agent; response includes one-time <code>api_key</code></td></tr>
+    <tr><td><code>DELETE /api/agents/{name}</code></td><td>Delete an agent</td></tr>
+    <tr><td><code>POST /api/agents/{name}/toggle</code></td><td>Toggle Active / Suspended status</td></tr>
+  </table>
+
+  <h3>Servers &amp; Tools</h3>
+  <table>
+    <tr><th>Endpoint</th><th>Description</th></tr>
+    <tr><td><code>GET /api/servers</code></td><td>List registered MCP servers</td></tr>
+    <tr><td><code>POST /api/servers</code></td><td>Register a new server</td></tr>
+    <tr><td><code>PUT /api/servers/{slug}</code></td><td>Update server name, endpoint, or trust</td></tr>
+    <tr><td><code>DELETE /api/servers/{slug}</code></td><td>Remove a server</td></tr>
+    <tr><td><code>POST /api/servers/{slug}/sync</code></td><td>Sync tools from the upstream server</td></tr>
+    <tr><td><code>GET /api/tools</code></td><td>List all discovered tools with input schemas</td></tr>
+  </table>
+
+  <h3>Policy</h3>
+  <table>
+    <tr><th>Endpoint</th><th>Description</th></tr>
+    <tr><td><code>GET /api/policy</code></td><td>Get the current deployed policy YAML</td></tr>
+    <tr><td><code>POST /api/policies/rule-preview</code></td><td>Merge a rule into a YAML string (stateless, no DB write)</td></tr>
+    <tr><td><code>POST /api/policies/param-rule-preview</code></td><td>Merge a param rule into a YAML string (stateless)</td></tr>
+    <tr><td><code>GET /api/policies/tool-matrix</code></td><td>Evaluate all tools for an optional <code>?agent=</code> parameter</td></tr>
+    <tr><td><code>POST /api/policies/deploy</code></td><td>Validate and save a new policy YAML</td></tr>
+  </table>
+
+  <h3>Approvals</h3>
+  <table>
+    <tr><th>Endpoint</th><th>Description</th></tr>
+    <tr><td><code>GET /api/approvals</code></td><td>List all approval requests</td></tr>
+    <tr><td><code>GET /api/approvals/pending-count</code></td><td>Count of requests awaiting decision</td></tr>
+    <tr><td><code>POST /api/approvals/{id}/approve</code></td><td>Approve and immediately execute the tool call</td></tr>
+    <tr><td><code>POST /api/approvals/{id}/deny</code></td><td>Deny the request; logs a Denied audit entry</td></tr>
+  </table>
+
+  <h3>Alerts</h3>
+  <table>
+    <tr><th>Endpoint</th><th>Description</th></tr>
+    <tr><td><code>GET /api/alerts</code></td><td>List all alerts</td></tr>
+    <tr><td><code>GET /api/alerts/unacknowledged-count</code></td><td>Count of unacknowledged alerts</td></tr>
+    <tr><td><code>POST /api/alerts/{id}/acknowledge</code></td><td>Acknowledge an alert</td></tr>
+    <tr><td><code>GET /api/alert-rules</code></td><td>Get alert rule configuration</td></tr>
+    <tr><td><code>PUT /api/alert-rules</code></td><td>Update alert rule configuration</td></tr>
+  </table>
+
+  <h3>Audit &amp; Dashboard</h3>
+  <table>
+    <tr><th>Endpoint</th><th>Description</th></tr>
+    <tr><td><code>GET /api/audit</code></td><td>Full audit trail (most recent first)</td></tr>
+    <tr><td><code>GET /api/dashboard</code></td><td>Overview stats, tool policies, signed tools, recent audit</td></tr>
+    <tr><td><code>POST /api/gateway/invoke</code></td><td>Simulate a tool call through the policy engine (UI test path)</td></tr>
+  </table>
+
+  <h3>MCP Gateway (agent-facing)</h3>
+  <table>
+    <tr><th>Endpoint</th><th>Description</th></tr>
+    <tr><td><code>POST /mcp/{slug}</code></td><td>MCP streamable-HTTP — initialize, tools/list, tools/call, and all other methods</td></tr>
+    <tr><td><code>GET /mcp/{slug}</code></td><td>SSE server-push channel (optional)</td></tr>
+    <tr><td><code>DELETE /mcp/{slug}</code></td><td>Close the MCP session</td></tr>
+    <tr><td><code>GET /health</code></td><td>Health check — no auth required</td></tr>
+  </table>
+</section>
+
+<!-- ───────────────────────────── Troubleshooting ── -->
+<section id="troubleshooting">
+  <h2>Troubleshooting</h2>
+
+  <table>
+    <tr><th>Symptom</th><th>Likely cause &amp; fix</th></tr>
+    <tr>
+      <td>Login works in <code>curl</code> but not in the browser</td>
+      <td>CORS mismatch — set <code>FALCON_UI_ORIGINS</code> to exactly match the origin (scheme+host+port) the UI is served from</td>
+    </tr>
+    <tr>
+      <td>Agent gets <code>401</code> at gateway</td>
+      <td>Missing or wrong <code>X-Agent-Key</code>, or the agent is Suspended. Check the agent status in the Agents tab.</td>
+    </tr>
+    <tr>
+      <td>Tool call returns <code>502</code></td>
+      <td>Policy allowed the call but the upstream MCP server is unreachable. This is a downstream connectivity problem, not a policy denial — check the audit trail for <code>Allowed</code> to confirm.</td>
+    </tr>
+    <tr>
+      <td>New tool isn't appearing</td>
+      <td>Sync the server again. Tools are only known to Falcon after a successful sync.</td>
+    </tr>
+    <tr>
+      <td>Rule builder change did nothing</td>
+      <td>"Add rule to YAML" only stages the change in the editor. Click <strong>Deploy</strong> to activate it.</td>
+    </tr>
+    <tr>
+      <td>Alerts aren't firing despite denials</td>
+      <td>Check the configured thresholds and time windows on the Alerts page. Denials must occur within the window to count. Also ensure the alert type is enabled.</td>
+    </tr>
+    <tr>
+      <td>Approval request not appearing on the Approvals page</td>
+      <td>The policy action must be exactly <code>require_approval</code> (not <code>deny</code>). Verify in the deployed YAML on the Policies page, and check the audit trail for a <code>Pending</code> entry.</td>
+    </tr>
+    <tr>
+      <td>Lost the bootstrap admin password</td>
+      <td>No reset flow exists. Either log in as another admin account, or wipe the database (<code>docker compose down -v</code>) to regenerate. All data is lost.</td>
+    </tr>
+    <tr>
+      <td>Database errors after upgrading</td>
+      <td>Schema migrations run automatically on startup (additive only). For unexpected errors, delete <code>backend/data/control_plane.db</code> and restart to reinitialize from scratch.</td>
+    </tr>
+  </table>
+</section>
+
+</main>
+
+<script>
+  // Highlight active nav link on scroll
+  const links = document.querySelectorAll('nav a');
+  const sections = document.querySelectorAll('section[id]');
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          links.forEach((l) => l.classList.remove('active'));
+          const active = document.querySelector(`nav a[href="#${entry.target.id}"]`);
+          if (active) active.classList.add('active');
+        }
+      });
+    },
+    { rootMargin: '-20% 0px -70% 0px' }
+  );
+
+  sections.forEach((s) => observer.observe(s));
+</script>
+</body>
+</html>
