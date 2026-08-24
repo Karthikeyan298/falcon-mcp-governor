@@ -11,6 +11,7 @@ from app.policy_engine import InvalidPolicyError, PolicyEngine
 from app.repositories import AgentRepository, ApprovalRepository, AuditRepository, ServerRepository, SettingsRepository, TrustRepository
 from app.services.anomaly_service import AnomalyDetector
 from app.security import hash_api_key
+from app.services.server_service import _auth_headers
 
 
 @dataclass
@@ -51,25 +52,27 @@ class McpGatewayService:
             if not endpoint.startswith(('http://', 'https://')):
                 raise BadRequestError('This server has no live MCP endpoint to proxy to')
 
+            auth = _auth_headers(server)
+
             if method == 'initialize':
-                return self._handle_initialize(conn, slug, endpoint, params, req_id, headers)
+                return self._handle_initialize(conn, slug, endpoint, params, req_id, headers, auth)
 
             session = self._session_store.get(incoming_session_id, slug)
             if session is None:
                 raise BadRequestError('Missing or unknown mcp-session-id; call initialize first')
 
             if method == 'notifications/initialized':
-                McpClient(endpoint).notify_initialized(session.upstream_session_id)
+                McpClient(endpoint, extra_headers=auth).notify_initialized(session.upstream_session_id)
                 return McpGatewayResponse(payload=None, status_code=202)
 
             if method == 'tools/list':
-                return self._handle_tools_list(conn, slug, endpoint, session, incoming_session_id, req_id)
+                return self._handle_tools_list(conn, slug, endpoint, session, incoming_session_id, req_id, auth)
 
             if method == 'tools/call':
-                return self._handle_tools_call(conn, slug, endpoint, session, incoming_session_id, params, req_id)
+                return self._handle_tools_call(conn, slug, endpoint, session, incoming_session_id, params, req_id, auth)
 
             # transparent passthrough for anything else (resources/list, prompts/list, ping, ...)
-            result = McpClient(endpoint).call(session.upstream_session_id, method, params, req_id=req_id)
+            result = McpClient(endpoint, extra_headers=auth).call(session.upstream_session_id, method, params, req_id=req_id)
             return McpGatewayResponse(payload=self._rpc_result(req_id, result), session_id=incoming_session_id)
 
     def open_stream(self, slug: str, session_id: str | None) -> None:
@@ -80,7 +83,7 @@ class McpGatewayService:
     def close_session(self, session_id: str | None) -> None:
         self._session_store.close(session_id)
 
-    def _handle_initialize(self, conn, slug: str, endpoint: str, params: dict, req_id, headers: Mapping[str, str]) -> McpGatewayResponse:
+    def _handle_initialize(self, conn, slug: str, endpoint: str, params: dict, req_id, headers: Mapping[str, str], auth: dict) -> McpGatewayResponse:
         # Agent identity comes from the `X-Agent-Key` header, not the self-reported
         # clientInfo.name -- any client could otherwise claim to be any agent and
         # inherit that agent's policy. The key is issued once at agent creation
@@ -98,15 +101,15 @@ class McpGatewayService:
         agent_name = agent['name']
         user = headers.get('x-agent-user', agent_name)
 
-        upstream_session_id, result = McpClient(endpoint).initialize_session()
+        upstream_session_id, result = McpClient(endpoint, extra_headers=auth).initialize_session()
 
         gateway_session_id = self._session_store.create(
             slug=slug, endpoint=endpoint, upstream_session_id=upstream_session_id, agent=agent_name, user=user,
         )
         return McpGatewayResponse(payload=self._rpc_result(req_id, result), session_id=gateway_session_id)
 
-    def _handle_tools_list(self, conn, slug, endpoint, session, incoming_session_id, req_id) -> McpGatewayResponse:
-        result = McpClient(endpoint).call(session.upstream_session_id, 'tools/list', {}, req_id=req_id)
+    def _handle_tools_list(self, conn, slug, endpoint, session, incoming_session_id, req_id, auth: dict) -> McpGatewayResponse:
+        result = McpClient(endpoint, extra_headers=auth).call(session.upstream_session_id, 'tools/list', {}, req_id=req_id)
 
         settings = SettingsRepository(conn)
         trust_repo = TrustRepository(conn)
@@ -129,7 +132,7 @@ class McpGatewayService:
             payload=self._rpc_result(req_id, {'tools': visible_tools}), session_id=incoming_session_id,
         )
 
-    def _handle_tools_call(self, conn, slug, endpoint, session, incoming_session_id, params, req_id) -> McpGatewayResponse:
+    def _handle_tools_call(self, conn, slug, endpoint, session, incoming_session_id, params, req_id, auth: dict) -> McpGatewayResponse:
         tool_name = params.get('name')
         arguments = params.get('arguments') or {}
 
@@ -162,7 +165,7 @@ class McpGatewayService:
         if outcome.decision in ('deny', 'require_approval'):
             return self._blocked_result(req_id, outcome.reason)
 
-        result = McpClient(endpoint).call(
+        result = McpClient(endpoint, extra_headers=auth).call(
             session.upstream_session_id, 'tools/call', {'name': tool_name, 'arguments': arguments}, req_id=req_id,
         )
         return McpGatewayResponse(payload=self._rpc_result(req_id, result), session_id=incoming_session_id)

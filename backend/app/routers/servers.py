@@ -14,12 +14,14 @@ def list_servers(service: ServerService = Depends(get_server_service)):
 
 @router.post('/api/servers')
 def create_server(payload: ServerCreate, service: ServerService = Depends(get_server_service)):
-    return service.create(slug=payload.slug, name=payload.name, endpoint=payload.endpoint, trust=payload.trust)
+    cred = payload.credential.model_dump() if payload.credential else None
+    return service.create(slug=payload.slug, name=payload.name, endpoint=payload.endpoint, trust=payload.trust, credential=cred)
 
 
 @router.put('/api/servers/{slug}')
 def update_server(slug: str, payload: ServerUpdate, service: ServerService = Depends(get_server_service)):
-    return service.update(slug, name=payload.name, endpoint=payload.endpoint, trust=payload.trust)
+    cred = payload.credential.model_dump() if payload.credential else None
+    return service.update(slug, name=payload.name, endpoint=payload.endpoint, trust=payload.trust, credential=cred)
 
 
 @router.delete('/api/servers/{slug}')

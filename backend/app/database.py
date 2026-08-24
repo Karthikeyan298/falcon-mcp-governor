@@ -76,7 +76,8 @@ CREATE TABLE IF NOT EXISTS servers (
     name TEXT NOT NULL,
     endpoint TEXT NOT NULL,
     trust TEXT NOT NULL DEFAULT 'Trusted',
-    last_synced TEXT NOT NULL
+    last_synced TEXT NOT NULL,
+    credentials TEXT
 );
 
 CREATE TABLE IF NOT EXISTS tools (
@@ -226,6 +227,10 @@ class Database:
         tool_columns = {row['name'] for row in conn.execute('PRAGMA table_info(tools)')}
         if 'input_schema' not in tool_columns:
             conn.execute('ALTER TABLE tools ADD COLUMN input_schema TEXT')
+
+        server_columns = {row['name'] for row in conn.execute('PRAGMA table_info(servers)')}
+        if 'credentials' not in server_columns:
+            conn.execute('ALTER TABLE servers ADD COLUMN credentials TEXT')
 
         # Seed default alert rules on first run or upgrade from older schema.
         if conn.execute("SELECT COUNT(*) FROM settings WHERE key = 'alert_rules'").fetchone()[0] == 0:

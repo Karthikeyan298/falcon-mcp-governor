@@ -61,16 +61,16 @@ class ServerRepository:
         row = self._conn.execute('SELECT name FROM servers WHERE slug = ?', (slug,)).fetchone()
         return row['name'] if row else slug
 
-    def create(self, *, slug: str, name: str, endpoint: str, trust: str, last_synced: str) -> None:
+    def create(self, *, slug: str, name: str, endpoint: str, trust: str, last_synced: str, credentials: str | None = None) -> None:
         self._conn.execute(
-            'INSERT INTO servers (slug, name, endpoint, trust, last_synced) VALUES (?, ?, ?, ?, ?)',
-            (slug, name, endpoint, trust, last_synced),
+            'INSERT INTO servers (slug, name, endpoint, trust, last_synced, credentials) VALUES (?, ?, ?, ?, ?, ?)',
+            (slug, name, endpoint, trust, last_synced, credentials),
         )
 
-    def update(self, slug: str, *, name: str, endpoint: str, trust: str) -> None:
+    def update(self, slug: str, *, name: str, endpoint: str, trust: str, credentials: str | None = None) -> None:
         self._conn.execute(
-            'UPDATE servers SET name = ?, endpoint = ?, trust = ? WHERE slug = ?',
-            (name, endpoint, trust, slug),
+            'UPDATE servers SET name = ?, endpoint = ?, trust = ?, credentials = ? WHERE slug = ?',
+            (name, endpoint, trust, credentials, slug),
         )
 
     def touch_last_synced(self, slug: str, iso_ts: str) -> None:

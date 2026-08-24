@@ -12,6 +12,9 @@
           <div>
             <strong>{{ server.name }}</strong>
             <small>{{ server.endpoint }} · {{ server.toolCount }} tools · synced {{ server.lastSynced }}</small>
+            @if (server.authType && server.authType !== 'none') {
+              <small>Auth: <code>{{ authBadge(server.authType) }}</code></small>
+            }
             @if (gatewayUrlFor(server); as url) {
               <small>Agent URL (via gateway): <code>{{ url }}</code></small>
             }
@@ -53,6 +56,47 @@
           <option value="Trusted">Trusted</option>
         </select>
       </label>
+
+      <!-- Auth type selector -->
+      <label style="grid-column: 1 / -1;">
+        Upstream authentication
+        <select name="authType" [(ngModel)]="cred.type">
+          <option value="none">No authentication</option>
+          <option value="bearer">Bearer token</option>
+          <option value="api_key">API key header</option>
+          <option value="basic">Basic auth</option>
+        </select>
+      </label>
+
+      @if (cred.type === 'bearer') {
+        <label style="grid-column: 1 / -1;">
+          Bearer token
+          <input name="credToken" type="password" placeholder="eyJhbGci…" [(ngModel)]="cred.token" autocomplete="new-password" />
+        </label>
+      }
+
+      @if (cred.type === 'api_key') {
+        <label>
+          Header name
+          <input name="credHeaderName" type="text" placeholder="X-Api-Key" [(ngModel)]="cred.header_name" />
+        </label>
+        <label>
+          Header value
+          <input name="credHeaderValue" type="password" placeholder="sk-…" [(ngModel)]="cred.header_value" autocomplete="new-password" />
+        </label>
+      }
+
+      @if (cred.type === 'basic') {
+        <label>
+          Username
+          <input name="credUsername" type="text" placeholder="username" [(ngModel)]="cred.username" autocomplete="username" />
+        </label>
+        <label>
+          Password
+          <input name="credPassword" type="password" placeholder="password" [(ngModel)]="cred.password" autocomplete="new-password" />
+        </label>
+      }
+
       <div class="status-cluster">
         <button class="primary-btn" type="submit" [disabled]="saving">
           {{ saving ? 'Saving…' : editingSlug ? 'Save changes' : 'Add server' }}

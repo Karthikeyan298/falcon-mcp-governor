@@ -1,5 +1,6 @@
 import hashlib
 import json
+import logging
 import sqlite3
 
 from app.database import Database
@@ -8,6 +9,53 @@ from app.formatting import relative_time
 from app.mcp_client import McpClient
 from app.policy_engine import PolicyEngine
 from app.repositories import ServerRepository, SettingsRepository, ToolRepository, TrustRepository
+from app.security import decrypt_credential, encrypt_credential
+
+logger = logging.getLogger(__name__)
+
+
+def _stored_auth_type(server: dict) -> str:
+    """Return the auth type label for display — never exposes the credential value."""
+    raw = server.get('credentials')
+    if not raw:
+        return 'none'
+    try:
+        cred = json.loads(decrypt_credential(raw))
+        return cred.get('type', 'none')
+    except Exception:
+        return 'none'
+
+
+def _auth_headers(server: dict) -> dict:
+    """Decrypt a server's stored credentials and return the corresponding HTTP headers.
+
+    Returns an empty dict when no credentials are configured or decryption fails
+    (logged as a warning so a misconfigured server doesn't crash an unrelated call).
+    """
+    raw = server.get('credentials')
+    if not raw:
+        return {}
+    try:
+        cred = json.loads(decrypt_credential(raw))
+    except Exception:
+        logger.warning('Failed to decrypt credentials for server %s — skipping auth headers', server.get('slug'))
+        return {}
+
+    ctype = cred.get('type', 'none')
+    if ctype == 'bearer':
+        token = cred.get('token', '')
+        return {'Authorization': f'Bearer {token}'} if token else {}
+    if ctype == 'api_key':
+        header = cred.get('header_name', 'X-Api-Key')
+        value = cred.get('header_value', '')
+        return {header: value} if value else {}
+    if ctype == 'basic':
+        import base64
+        username = cred.get('username', '')
+        password = cred.get('password', '')
+        encoded = base64.b64encode(f'{username}:{password}'.encode()).decode()
+        return {'Authorization': f'Basic {encoded}'} if username else {}
+    return {}
 
 
 class RiskClassifier:
@@ -41,29 +89,33 @@ class ServerService:
                     'slug': s['slug'], 'name': s['name'], 'endpoint': s['endpoint'],
                     'toolCount': tools_repo.count_for_server(s['slug']),
                     'trust': s['trust'], 'lastSynced': relative_time(s['last_synced']),
+                    'authType': _stored_auth_type(s),
                 }
                 for s in servers_repo.list_all()
             ]
 
-    def create(self, *, slug: str, name: str, endpoint: str, trust: str) -> dict:
+    def create(self, *, slug: str, name: str, endpoint: str, trust: str, credential: dict | None = None) -> dict:
         with self._database.connect() as conn:
             repo = ServerRepository(conn)
             if repo.exists(slug):
                 raise ConflictError('A server with this slug already exists')
-            repo.create(slug=slug, name=name, endpoint=endpoint, trust=trust, last_synced=self._database.now_iso())
-            return {'slug': slug, 'name': name, 'endpoint': endpoint, 'toolCount': 0, 'trust': trust, 'lastSynced': 'just now'}
+            encrypted = encrypt_credential(json.dumps(credential)) if credential and credential.get('type', 'none') != 'none' else None
+            repo.create(slug=slug, name=name, endpoint=endpoint, trust=trust, last_synced=self._database.now_iso(), credentials=encrypted)
+            return {'slug': slug, 'name': name, 'endpoint': endpoint, 'toolCount': 0, 'trust': trust, 'lastSynced': 'just now', 'authType': credential.get('type', 'none') if credential else 'none'}
 
-    def update(self, slug: str, *, name: str, endpoint: str, trust: str) -> dict:
+    def update(self, slug: str, *, name: str, endpoint: str, trust: str, credential: dict | None = None) -> dict:
         with self._database.connect() as conn:
             repo = ServerRepository(conn)
             server = repo.get(slug)
             if server is None:
                 raise NotFoundError('Server not found')
-            repo.update(slug, name=name, endpoint=endpoint, trust=trust)
+            encrypted = encrypt_credential(json.dumps(credential)) if credential and credential.get('type', 'none') != 'none' else None
+            repo.update(slug, name=name, endpoint=endpoint, trust=trust, credentials=encrypted)
             tool_count = ToolRepository(conn).count_for_server(slug)
             return {
                 'slug': slug, 'name': name, 'endpoint': endpoint, 'toolCount': tool_count,
                 'trust': trust, 'lastSynced': relative_time(server['last_synced']),
+                'authType': credential.get('type', 'none') if credential else 'none',
             }
 
     def delete(self, slug: str) -> None:
@@ -85,7 +137,7 @@ class ServerService:
                 raise NotFoundError('Server not found')
 
             if server['endpoint'].startswith(('http://', 'https://')):
-                self._sync_real_tools(conn, slug=slug, server=server)
+                self._sync_real_tools(conn, slug=slug, server=servers_repo.get(slug))
 
             now = self._database.now_iso()
             servers_repo.touch_last_synced(slug, now)
@@ -99,7 +151,7 @@ class ServerService:
         """Discover the real server's tools (raises `McpDiscoveryError` on failure,
         mapped to 502 by the router), then register trust + a conservative
         default policy action for each newly-seen tool."""
-        discovered = McpClient(server['endpoint']).discover_tools()
+        discovered = McpClient(server['endpoint'], extra_headers=_auth_headers(server)).discover_tools()
 
         tools_repo = ToolRepository(conn)
         trust_repo = TrustRepository(conn)

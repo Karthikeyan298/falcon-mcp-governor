@@ -35,17 +35,28 @@ class GatewayInvokeRequest(BaseModel):
     params: dict = {}
 
 
+class CredentialConfig(BaseModel):
+    type: str = 'none'           # none | bearer | api_key | basic
+    token: str = ''              # bearer
+    header_name: str = 'X-Api-Key'  # api_key
+    header_value: str = ''       # api_key
+    username: str = ''           # basic
+    password: str = ''           # basic
+
+
 class ServerCreate(BaseModel):
     slug: str
     name: str
     endpoint: str
     trust: str = 'Needs review'
+    credential: CredentialConfig | None = None
 
 
 class ServerUpdate(BaseModel):
     name: str
     endpoint: str
     trust: str
+    credential: CredentialConfig | None = None
 
 
 class AgentCreate(BaseModel):

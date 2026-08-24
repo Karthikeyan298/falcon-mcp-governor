@@ -62,6 +62,17 @@ export interface AgentCreated extends Agent {
   api_key: string;
 }
 
+export type AuthType = 'none' | 'bearer' | 'api_key' | 'basic';
+
+export interface CredentialConfig {
+  type: AuthType;
+  token?: string;
+  header_name?: string;
+  header_value?: string;
+  username?: string;
+  password?: string;
+}
+
 export interface McpServer {
   slug: string;
   name: string;
@@ -69,6 +80,7 @@ export interface McpServer {
   toolCount: number;
   trust: 'Trusted' | 'Needs review';
   lastSynced: string;
+  authType: AuthType;
 }
 
 export interface ToolInputSchemaProperty {
@@ -198,13 +210,13 @@ export class ApiService {
     return this.http.post<McpServer>(`${API_BASE}/api/servers/${encodeURIComponent(slug)}/sync`, {});
   }
 
-  addServer(payload: { slug: string; name: string; endpoint: string; trust: string }): Observable<McpServer> {
+  addServer(payload: { slug: string; name: string; endpoint: string; trust: string; credential?: CredentialConfig }): Observable<McpServer> {
     return this.http.post<McpServer>(`${API_BASE}/api/servers`, payload);
   }
 
   updateServer(
     slug: string,
-    payload: { name: string; endpoint: string; trust: string },
+    payload: { name: string; endpoint: string; trust: string; credential?: CredentialConfig },
   ): Observable<McpServer> {
     return this.http.put<McpServer>(`${API_BASE}/api/servers/${encodeURIComponent(slug)}`, payload);
   }

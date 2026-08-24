@@ -27,10 +27,12 @@ class McpDiscoveryError(Exception):
 
 
 class McpClient:
-    def __init__(self, endpoint: str, *, client_info: dict | None = None):
+    def __init__(self, endpoint: str, *, client_info: dict | None = None, extra_headers: dict | None = None):
         self._endpoint = endpoint
         self._client_info = client_info or _DEFAULT_CLIENT_INFO
         self._headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream'}
+        if extra_headers:
+            self._headers.update(extra_headers)
 
     def initialize_session(self, timeout: float = 5.0) -> tuple[str | None, dict]:
         """Perform the initialize handshake and complete it with notifications/initialized.
