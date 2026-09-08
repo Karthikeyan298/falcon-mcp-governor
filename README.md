@@ -30,14 +30,28 @@ happens to be configured with:
 ## Quick start
 
 ```bash
-docker compose up -d --build
+./deploy.sh
 ```
 
-This starts two containers:
+This wraps `docker compose up -d --build` and starts two containers:
 
 - **backend** — FastAPI on `http://localhost:8000`, SQLite persisted in the
   `falcon-db` volume
 - **frontend** — Angular UI served by nginx on `http://localhost:4200`
+
+Add `--with-local-test-setup` to also bring up example MCP servers (a db
+server, an email server) and a demo agent registered against Falcon — useful
+if you want something real to point a policy at without building your own
+MCP server first:
+
+```bash
+./deploy.sh --with-local-test-setup
+```
+
+Tear down with `./deploy.sh down` (add `--with-local-test-setup` to tear
+down both). If you don't need the local-test-setup wiring, plain
+`docker compose up -d --build` works too — `deploy.sh` is a thin wrapper
+around it.
 
 The database starts empty. On first boot, the backend prints a one-time
 admin password to its log:
@@ -52,7 +66,7 @@ If you serve the frontend from anywhere other than `http://localhost:4200`,
 set `FALCON_UI_ORIGINS` first or CORS will reject the login request:
 
 ```bash
-FALCON_UI_ORIGINS=http://localhost:5173 docker compose up -d --build
+FALCON_UI_ORIGINS=http://localhost:5173 ./deploy.sh
 ```
 
 Running the backend/frontend directly (without Docker), the full policy
@@ -97,11 +111,6 @@ cd ui/mcp-governance-ui
 npm install
 npm start                                     # http://localhost:4200
 ```
-
-`local-test-setup/` spins up example MCP servers (a db server, an email
-server) and a small demo agent registered against Falcon, if you want
-something real to point a policy at without building your own MCP server
-first — see [deploy.sh](deploy.sh) (`--with-local-test-setup`).
 
 ## License
 
