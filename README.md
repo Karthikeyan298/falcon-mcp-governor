@@ -48,6 +48,17 @@ MCP server first:
 ./deploy.sh --with-local-test-setup
 ```
 
+The demo agent (story-writer) calls out to a local [Ollama](https://ollama.com)
+server for its LLM calls, so before running with `--with-local-test-setup`,
+install Ollama and pull the `llama3` model:
+
+```bash
+ollama pull llama3
+```
+
+Ollama must be running on the host (`http://localhost:11434` by default) —
+it isn't started by `deploy.sh` or Docker Compose.
+
 Tear down with `./deploy.sh down` (add `--with-local-test-setup` to tear
 down both). If you don't need the local-test-setup wiring, plain
 `docker compose up -d --build` works too — `deploy.sh` is a thin wrapper
